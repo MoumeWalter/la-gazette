@@ -18,7 +18,7 @@ Ils ne signifient pas que les composants sont déjà installés ou testés.
 | Infrastructure | Ansible, Docker et Docker Compose | Darrel |
 | Langage | Python | Walter / équipe |
 | CI/CD | GitHub Actions et déploiement contrôlé avec Ansible | Darrel |
-| Publication | Édition HTML statique et archives datées ; serveur de diffusion à confirmer | Walter / Darrel |
+| Publication | Édition HTML statique servie par Nginx, avec archives datées | Walter / Darrel |
 
 Réserves transversales :
 - Les droits de réutilisation des sources restent à clarifier.
@@ -1115,8 +1115,8 @@ testé à ce stade.
 
 ### Décisions de cadrage encore ouvertes
 
-- Serveur de diffusion de l'édition HTML, adresse de consultation,
-  modalités HTTPS et éventuelle restriction d'accès.
+- Adresse de consultation de l'édition HTML, modalités HTTPS
+  et éventuelle restriction d'accès.
 - Durée de conservation et droits d'archivage des éditions.
 - Fuseau de référence de l'édition.
 - Conditions de réutilisation des sources encore non clarifiées.
@@ -1151,8 +1151,9 @@ comme déjà mises en œuvre ou testées.
 
 Responsable : Walter.
 Relecture : Darrel et Yannick.
-Statut : format HTML statique validé par l'équipe.
-Serveur de diffusion et modalités d'accès à confirmer.
+Statut : format HTML statique validé par l'équipe ;
+Nginx validé par Darrel pour la diffusion.
+Les modalités d'accès et les droits de publication restent à préciser.
 
 ### Besoin
 
@@ -1257,9 +1258,14 @@ des lecteurs ne seront ajoutés.
 - Des fichiers persistants, distincts des données internes.
 - Un accès en lecture seule aux fichiers pour le serveur de diffusion.
 
-Le serveur de diffusion reste à confirmer.
-Nginx est la solution proposée, mais n'est pas déclaré validé
-dans ce document.
+Nginx est retenu et validé par Darrel pour servir les fichiers HTML.
+
+Il sera déployé comme service distinct dans Docker Compose,
+avec un accès en lecture seule au répertoire de publication.
+Sa configuration sera versionnée et déployée avec Ansible.
+
+Les fichiers JSONL, la base SQLite, les journaux internes et les secrets
+ne seront pas exposés par le serveur web.
 
 L'adresse de consultation, les modalités HTTPS et une éventuelle
 restriction d'accès dépendront de l'infrastructure fournie
@@ -1310,3 +1316,10 @@ des conditions applicables.
 - Absence d'exposition des fichiers JSONL, de SQLite et des secrets.
 
 Aucun mécanisme de publication n'est déclaré réalisé ni testé.
+
+### Sources
+
+- Nginx — Guide de démarrage et contenu statique :
+  https://nginx.org/en/docs/beginners_guide.html
+- Nginx — Documentation :
+  https://nginx.org/en/docs/
