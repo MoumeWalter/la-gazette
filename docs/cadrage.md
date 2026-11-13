@@ -63,6 +63,21 @@ Le fuseau de référence de l'édition reste à définir explicitement.
 
 ## 4. Stack retenue et justification
 
+### Langage — Python
+
+Choix validé par l'équipe : utiliser Python comme langage principal
+pour la collecte, le nettoyage, le stockage, le regroupement
+et la génération de l'édition.
+
+Ce choix assure la cohérence avec JSONL, SQLite et les traitements
+TF-IDF et de classification hiérarchique prévus avec scikit-learn.
+Un langage commun limite les interfaces entre les étapes.
+
+Le développement et les tests utiliseront WSL 2 ; l'exécution cible
+sera conteneurisée. La version de Python, les bibliothèques,
+les dépendances et l'outillage de test restent à préciser.
+Aucun résultat de performance n'est revendiqué.
+
 ### Collecte — flux RSS des éditeurs
 
 Retenir les flux RSS pour récupérer les titres, extraits, liens et dates
@@ -205,7 +220,7 @@ seront testés lors des TD suivants.
 
 ### Choix restant à compléter
 
-- Langage, bibliothèques et outillage de test.
+- Version de Python, bibliothèques et outillage de test.
 - Stratégie de CI/CD et outil retenu.
 - Format et mode de publication de l'édition.
 - Fuseau de référence de l'édition.
@@ -279,6 +294,15 @@ Ces points restent à définir ; ils ne sont pas présentés comme validés.
 
 Les alternatives relatives aux choix encore ouverts seront ajoutées
 après comparaison et validation par l'équipe.
+
+### Langage
+
+- JavaScript/TypeScript avec Node.js : non retenu comme langage principal
+  pour éviter de reconsidérer l'implémentation du regroupement
+  ou d'ajouter un composant Python séparé.
+- Scripts shell comme langage principal : non retenus pour centraliser
+  les traitements métier et leurs tests dans le projet Python ;
+  des scripts système ciblés restent possibles.
 
 ## 6. Risques et mesures envisagées
 

@@ -813,13 +813,107 @@ n'est déclaré réalisé au TD 1.
 Les modalités propres à l'hébergement seront ajoutées
 lorsqu'elles seront communiquées.
 
-## 7. Points transversaux restant à décider
+## 7. Choisir le langage du pipeline
 
-- Langage, bibliothèques et outillage de test.
-- Outil et stratégie de CI/CD.
-- Format et mode de publication de l'édition.
-- Fuseau de référence.
-- Conditions de réutilisation des sources encore ouvertes.
+Responsable : Walter.
+Validation : équipe.
+Statut : Python validé par l'équipe.
+Comparaison documentaire qualitative ; aucun benchmark réalisé.
 
-Les paramètres détaillés d'exécution, de rétention, de sauvegarde,
-d'alerte et d'évaluation seront précisés lors de la réalisation.
+### Besoin
+
+Utiliser un langage commun pour la collecte, le nettoyage,
+le stockage, le regroupement par thèmes et la génération de l'édition.
+
+Limiter les interfaces entre plusieurs langages et conserver
+un environnement reproductible sous WSL 2 et dans les conteneurs.
+
+### Option A — Python
+
+Avantages :
+- Bibliothèque standard comprenant notamment json, csv, logging
+  et une interface SQLite via sqlite3.
+- Écosystème adapté au traitement de textes et au machine learning.
+- Possibilité d'utiliser scikit-learn pour TF-IDF et la classification
+  hiérarchique déjà retenus.
+- Possibilité de réunir les étapes du pipeline dans un même projet.
+
+Limites :
+- Dépendances et versions à maîtriser.
+- Gestion explicite des erreurs, délais, reprises et transactions.
+- Temps de calcul et mémoire du regroupement à mesurer.
+- Le choix du langage ne garantit pas la robustesse opérationnelle.
+
+Décision :
+Python retenu par l'équipe pour le pipeline.
+
+### Option B — JavaScript/TypeScript avec Node.js
+
+Intérêt envisagé :
+Constituer une autre approche pour développer la collecte,
+les transformations et la génération de l'édition.
+
+Limites dans notre architecture :
+- Nécessiterait de reconsidérer l'implémentation du regroupement retenu
+  ou de maintenir un composant Python séparé.
+- Aucun besoin d'application JavaScript ne justifie ici l'ajout
+  d'un second environnement de développement.
+
+Décision :
+Non retenu comme langage principal pour conserver la cohérence
+avec les traitements de regroupement prévus en Python.
+
+Ce choix ne signifie pas que Node.js est incapable de réaliser
+un pipeline de données.
+
+### Option C — Scripts shell comme langage principal
+
+Intérêt envisagé :
+Déclencher les commandes et réaliser des opérations système ciblées.
+
+Limites dans notre architecture :
+- L'équipe devrait assembler plusieurs outils pour traiter
+  les flux, les dates, les données structurées et les thèmes.
+- Les traitements métier et leurs tests seraient répartis entre
+  plusieurs commandes plutôt que centralisés dans le projet Python.
+
+Décision :
+Ne pas retenir shell comme langage principal du pipeline.
+Conserver des scripts courts pour les opérations système ciblées.
+
+### Justification du choix
+
+Python est retenu pour son adéquation aux choix déjà validés :
+JSONL, SQLite et regroupement TF-IDF avec classification hiérarchique.
+
+Un langage principal commun limite les interfaces entre les étapes.
+Le traitement sera développé et testé sous WSL 2, puis exécuté
+dans un environnement conteneurisé défini dans le dépôt.
+
+Cette décision repose sur une comparaison qualitative d'adéquation
+au projet, pas sur un benchmark de performances ni sur une supériorité
+générale de Python sur les autres langages.
+
+### Points à préciser au TD 2
+
+- Version de Python compatible avec les dépendances retenues.
+- Bibliothèque de lecture RSS.
+- Bibliothèque d'accès HTTP et gestion des délais.
+- Outillage de test.
+- Déclaration et verrouillage des dépendances.
+- Commande d'exécution et organisation des modules.
+- Tests de compatibilité dans le conteneur.
+
+Le choix de Python ne vaut pas validation automatique
+de toutes les bibliothèques associées.
+
+### Sources
+
+- Bibliothèque standard Python :
+  https://docs.python.org/3/library/index.html
+- Interface SQLite :
+  https://docs.python.org/3/library/sqlite3.html
+- scikit-learn — Regroupement de documents :
+  https://scikit-learn.org/stable/auto_examples/text/plot_document_clustering.html
+- scikit-learn — Classification hiérarchique :
+  https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html
