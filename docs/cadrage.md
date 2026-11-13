@@ -3,10 +3,16 @@
 Statut : choix principaux de la première architecture validés ;
 cadrage à finaliser et à relire collectivement.
 
-Choix validés : collecte RSS, timer systemd, stockage JSONL + SQLite,
-regroupement TF-IDF avec classification hiérarchique,
-supervision Prometheus + Pushgateway + Grafana,
-et déploiement Ansible + Docker + Docker Compose.
+Choix validés :
+- Python pour le pipeline ;
+- flux RSS des éditeurs pour la collecte ;
+- timer systemd pour la planification quotidienne ;
+- JSONL et SQLite pour le stockage ;
+- TF-IDF et classification hiérarchique pour les thèmes ;
+- Prometheus, Pushgateway et Grafana pour la supervision ;
+- Ansible, Docker et Docker Compose pour le déploiement ;
+- GitHub Actions pour la CI et la préparation des versions,
+  avec déploiement explicitement déclenché après validation.
 
 Les droits de réutilisation des sources et la compatibilité
 de l'infrastructure fournie restent à clarifier.
@@ -60,6 +66,7 @@ identifier les éventuels incidents.
   de fonctionnalités.
 
 Le fuseau de référence de l'édition reste à définir explicitement.
+L'âge des articles sera contrôlé au moment de la publication.
 
 ## 4. Stack retenue et justification
 
@@ -76,6 +83,7 @@ Un langage commun limite les interfaces entre les étapes.
 Le développement et les tests utiliseront WSL 2 ; l'exécution cible
 sera conteneurisée. La version de Python, les bibliothèques,
 les dépendances et l'outillage de test restent à préciser.
+
 Aucun résultat de performance n'est revendiqué.
 
 ### Collecte — flux RSS des éditeurs
@@ -127,6 +135,7 @@ des articles.
 
 SQLite est retenu pour interroger les articles propres, appliquer les
 contraintes d'unicité définies et gérer les thèmes et les éditions.
+
 L'architecture prévoit une exécution sur une machine unique et des
 écritures coordonnées, en tenant compte de la limite d'un écrivain
 simultané par base.
@@ -151,6 +160,7 @@ hiérarchique avec distance cosinus et liaison moyenne.
 
 Cette approche est retenue pour permettre un nombre de groupes variable
 selon les publications du jour, sans imposer un nombre fixe de thèmes.
+
 Les termes caractéristiques serviront à proposer des libellés,
 sans générer de résumés d'articles avec un LLM.
 
@@ -174,6 +184,7 @@ consultables avec journalctl.
 La supervision contrôlera les résultats des étapes, les dates
 des dernières exécutions, la présence de l'édition attendue,
 son heure de publication et la fraîcheur des articles.
+
 Un ancien succès ne devra pas masquer une absence d'exécution.
 
 Grafana Alerting est retenu comme unique moteur d'alerte initial.
@@ -195,6 +206,7 @@ des composants et la planification quotidienne par systemd.
 
 Les fichiers Compose, configurations de supervision et unités systemd
 seront versionnés et déployés depuis le dépôt.
+
 Les données JSONL, la base SQLite et les données de supervision
 seront conservées dans un stockage persistant, hors du dépôt Git.
 
@@ -218,18 +230,59 @@ avant le déploiement.
 Le déploiement, sa réexécution, la persistance et la restauration
 seront testés lors des TD suivants.
 
-### Choix restant à compléter
+### CI/CD — GitHub Actions et déploiement contrôlé
 
-- Version de Python, bibliothèques et outillage de test.
-- Stratégie de CI/CD et outil retenu.
+Choix validé par Darrel : utiliser GitHub Actions pour les contrôles
+de qualité, les tests automatisés, la validation des configurations
+et la construction de l'image Docker.
+
+Ce choix conserve les contrôles avec le dépôt GitHub existant,
+sans ajouter une plateforme CI distincte à exploiter.
+
+Les contrôles seront déclenchés sur les push et pull requests
+selon les règles définies dans les workflows.
+
+Le déploiement de production sera déclenché explicitement après
+réussite des contrôles et relecture. Ansible déploiera la configuration
+et la version choisie.
+
+Chaque version sera identifiée par son commit et une référence
+d'image traçable. Aucun déploiement automatique sur chaque push
+n'est retenu pour la première architecture.
+
+Systemd conserve la planification quotidienne.
+GitHub Actions n'est pas utilisé comme ordonnanceur de l'édition de 7 h.
+
+Le registre ou le transfert des images, les quotas, les accès au serveur
+et la procédure de retour arrière restent à préciser et à tester.
+
+### Points restant à préciser
+
+Décisions de cadrage :
 - Format et mode de publication de l'édition.
 - Fuseau de référence de l'édition.
-- Paramètres opérationnels : horaires, seuils, rétentions,
-  sauvegardes et canal de notification.
 
-Ces points restent à définir ; ils ne sont pas présentés comme validés.
+Paramètres de réalisation :
+- Version de Python, bibliothèques et outillage de test.
+- Organisation des modules et commande d'exécution.
+- Workflows de CI et règles de déclenchement.
+- Registre ou mécanisme de transfert des images.
+- Quotas, accès au serveur et déclenchement du déploiement.
+- Horaires, délais, seuils, rétentions et canal de notification.
+- Sauvegardes, restauration et retour arrière.
+
+Ces points restent ouverts ; ils ne sont pas présentés comme validés.
 
 ## 5. Alternatives écartées et justification
+
+### Langage
+
+- JavaScript/TypeScript avec Node.js : non retenu comme langage principal
+  pour éviter de reconsidérer l'implémentation du regroupement
+  ou d'ajouter un composant Python séparé.
+- Scripts shell comme langage principal : non retenus pour centraliser
+  les traitements métier et leurs tests dans le projet Python ;
+  des scripts système ciblés restent possibles.
 
 ### Collecte
 
@@ -246,9 +299,9 @@ Ces points restent à définir ; ils ne sont pas présentés comme validés.
   et du rattrapage possible des échéances manquées.
 - Apache Airflow : complexité initiale non justifiée pour l'exécution
   séquentielle envisagée sur un serveur unique.
-- GitHub Actions planifié : non retenu comme seul ordonnanceur
-  de production pour l'échéance de 7 h ; son usage pour la CI
-  reste à évaluer séparément.
+- GitHub Actions planifié : non retenu comme ordonnanceur
+  de l'édition de 7 h ; GitHub Actions est en revanche retenu
+  pour la CI et la préparation des versions.
 
 ### Stockage
 
@@ -292,17 +345,17 @@ Ces points restent à définir ; ils ne sont pas présentés comme validés.
 - Kubernetes : non retenu pour la première architecture, faute
   de cluster imposé ou de besoin multi-nœud confirmé.
 
-Les alternatives relatives aux choix encore ouverts seront ajoutées
+### CI/CD
+
+- GitLab CI/CD : non retenu pour éviter une migration ou l'ajout
+  d'une seconde plateforme alors que le dépôt est sur GitHub.
+- Jenkins : non retenu pour éviter un service supplémentaire
+  à héberger, sécuriser et maintenir.
+- Contrôles manuels seuls : insuffisants pour assurer une vérification
+  systématique et traçable ; conservés en complément de la CI.
+
+Les alternatives relatives à la publication seront ajoutées
 après comparaison et validation par l'équipe.
-
-### Langage
-
-- JavaScript/TypeScript avec Node.js : non retenu comme langage principal
-  pour éviter de reconsidérer l'implémentation du regroupement
-  ou d'ajouter un composant Python séparé.
-- Scripts shell comme langage principal : non retenus pour centraliser
-  les traitements métier et leurs tests dans le projet Python ;
-  des scripts système ciblés restent possibles.
 
 ## 6. Risques et mesures envisagées
 
@@ -310,14 +363,16 @@ après comparaison et validation par l'équipe.
 |---|---|---|
 | Conditions des éditeurs incompatibles avec notre usage collectif | Clarifier les autorisations avant exploitation ; remplacer une source si nécessaire ; documenter la décision dans sources.csv. | Walter |
 | Source indisponible ou champs manquants | Prévoir des délais d'attente, des tentatives limitées et un contrôle des champs ; signaler les sources en échec. | Walter |
-| Articles trop anciens, dates incorrectes ou doublons | Contrôler chaque date avec son fuseau horaire ; exclure de l'édition les articles de plus de 24 h ou non datables ; définir une règle de déduplication. | Walter |
+| Articles trop anciens, dates incorrectes ou doublons | Contrôler chaque date avec son fuseau horaire ; exclure de l'édition les articles de 24 h ou plus ou non datables ; définir une règle de déduplication. | Walter |
 | Collecte accidentelle de contenus hors périmètre | Limiter les champs conservés aux titres, extraits, liens, dates et métadonnées techniques nécessaires ; exclure texte intégral, images, commentaires et profils. | Walter |
 | Édition absente à 7 h ou pipeline interrompu | Prévoir une marge avant publication, une procédure de relance et une alerte ; mesurer le respect de l'horaire. | Darrel / Yannick |
 | Perte des données ou environnement non reproductible | Prévoir un stockage persistant, des sauvegardes avec test de restauration et une infrastructure décrite en code ; ne pas versionner les données collectées ni les secrets dans Git. | Darrel |
-| Déploiement incompatible avec le serveur fourni | Confirmer le système, les ressources, les accès et les privilèges avant déploiement ; adapter les configurations sans masquer les changements d'architecture. | Darrel |
+| Déploiement incompatible avec le serveur fourni | Confirmer le système, les ressources, les accès et les privilèges avant déploiement ; documenter toute adaptation de l'architecture. | Darrel |
 | Regroupements peu pertinents ou difficiles à reproduire | Évaluer un échantillon annoté ; régler le seuil ; définir le traitement des textes vides et des publications isolées ; tracer les paramètres et versions. | Yannick |
 | Anciennes métriques interprétées comme une réussite du jour | Contrôler les dates de dernière exécution et de publication ; tester les métriques absentes et les résultats périmés. | Yannick |
 | Pipeline et supervision indisponibles simultanément | Documenter ce risque lié à l'hébergement commun ; étudier un contrôle externe si les conditions le permettent. | Darrel / Yannick |
+| Version déployée non identifiable ou retour arrière incomplet | Relier le déploiement au commit et à l'image ; conserver la référence précédente ; prévoir le traitement des changements de données et de schéma. | Darrel |
+| Secrets exposés ou dépassement du budget CI | Limiter les permissions, protéger les secrets, vérifier les quotas et définir la rétention des artefacts. | Darrel |
 | Dépendance à un seul membre ou contributions incohérentes | Documenter chaque partie, faire relire les modifications par un autre membre et valider collectivement les décisions techniques. | Toute l'équipe |
 
 Ces mesures sont prévues au cadrage ; elles ne sont pas encore
