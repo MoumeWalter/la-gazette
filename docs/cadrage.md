@@ -1,11 +1,16 @@
 # Note de cadrage — La gazette
 
-Statut : cadrage en cours de finalisation.
+Statut : choix principaux de la première architecture validés ;
+cadrage à finaliser et à relire collectivement.
+
 Choix validés : collecte RSS, timer systemd, stockage JSONL + SQLite,
-regroupement TF-IDF avec classification hiérarchique et supervision
-Prometheus + Pushgateway + Grafana, complétée par des journaux structurés.
-Infrastructure en code et autres choix ouverts à compléter.
-Les droits de réutilisation des sources restent à clarifier.
+regroupement TF-IDF avec classification hiérarchique,
+supervision Prometheus + Pushgateway + Grafana,
+et déploiement Ansible + Docker + Docker Compose.
+
+Les droits de réutilisation des sources et la compatibilité
+de l'infrastructure fournie restent à clarifier.
+Les autres choix ouverts sont indiqués en section 4.
 
 ## 1. Besoin
 
@@ -70,29 +75,6 @@ La validation technique ne vaut pas autorisation de réutilisation.
 Les conditions encore ouvertes devront être clarifiées avant exploitation.
 Une source incompatible devra être remplacée ou faire l'objet
 d'une autorisation adaptée.
-
-### Supervision — Prometheus, Pushgateway et Grafana
-
-Choix validé par Yannick : utiliser Prometheus pour les métriques,
-Pushgateway pour les résultats des traitements batch et Grafana
-pour les tableaux de bord et les alertes.
-
-Les journaux applicatifs structurés complètent les métriques
-pour le diagnostic ; les journaux du service systemd seront
-consultables avec journalctl.
-
-La supervision contrôlera les résultats des étapes, les dates
-des dernières exécutions, la présence de l'édition attendue,
-son heure de publication et la fraîcheur des articles.
-Un ancien succès ne devra pas masquer une absence d'exécution.
-
-Grafana Alerting est retenu comme unique moteur d'alerte initial.
-Le canal de notification, les seuils, les rétentions et le traitement
-des métriques absentes restent à définir et à tester.
-
-Le risque d'indisponibilité simultanée du pipeline et de sa supervision
-sur une même machine est identifié. Aucun dispositif externe
-de surveillance n'est encore retenu.
 
 ### Ordonnancement — timer systemd
 
@@ -164,14 +146,73 @@ sur un échantillon annoté par l'équipe.
 Les paramètres, les versions et les résultats des expériences seront
 tracés. Les performances restent à mesurer.
 
+### Supervision — Prometheus, Pushgateway et Grafana
+
+Choix validé par Yannick : utiliser Prometheus pour les métriques,
+Pushgateway pour les résultats des traitements batch et Grafana
+pour les tableaux de bord et les alertes.
+
+Les journaux applicatifs structurés complètent les métriques
+pour le diagnostic ; les journaux du service systemd seront
+consultables avec journalctl.
+
+La supervision contrôlera les résultats des étapes, les dates
+des dernières exécutions, la présence de l'édition attendue,
+son heure de publication et la fraîcheur des articles.
+Un ancien succès ne devra pas masquer une absence d'exécution.
+
+Grafana Alerting est retenu comme unique moteur d'alerte initial.
+Le canal de notification, les seuils, les rétentions et le traitement
+des métriques absentes restent à définir et à tester.
+
+Le risque d'indisponibilité simultanée du pipeline et de sa supervision
+sur une même machine est identifié. Aucun dispositif externe
+de surveillance n'est encore retenu.
+
+### Infrastructure et conteneurisation — Ansible, Docker et Compose
+
+Choix validé par Darrel : utiliser Ansible pour configurer le serveur
+Linux et déployer les fichiers, Docker pour conteneuriser les composants
+et Docker Compose pour décrire les services, réseaux et volumes.
+
+Cette séparation distingue la configuration de l'hôte, l'exécution
+des composants et la planification quotidienne par systemd.
+
+Les fichiers Compose, configurations de supervision et unités systemd
+seront versionnés et déployés depuis le dépôt.
+Les données JSONL, la base SQLite et les données de supervision
+seront conservées dans un stockage persistant, hors du dépôt Git.
+
+Le traitement sera exécuté à la demande, tandis que les composants
+de supervision devront rester disponibles.
+SQLite restera un fichier de base persistant, sans serveur de base
+de données distinct.
+
+En développement, l'équipe utilisera WSL 2 avec une procédure Docker
+commune à documenter. Les tests locaux seront complétés par des tests
+sur le serveur de production.
+
+La cible envisagée est un serveur existant : sa création n'est pas
+prise en charge par cette architecture. Son système, ses ressources,
+ses accès et les privilèges disponibles restent à confirmer.
+
+Les secrets ne seront pas stockés dans le dépôt.
+Leur mode de fourniture et les permissions nécessaires seront définis
+avant le déploiement.
+
+Le déploiement, sa réexécution, la persistance et la restauration
+seront testés lors des TD suivants.
+
 ### Choix restant à compléter
 
 - Langage, bibliothèques et outillage de test.
-- Conteneurisation et stratégie de CI/CD.
-- Infrastructure en code et modalités de déploiement.
+- Stratégie de CI/CD et outil retenu.
 - Format et mode de publication de l'édition.
+- Fuseau de référence de l'édition.
+- Paramètres opérationnels : horaires, seuils, rétentions,
+  sauvegardes et canal de notification.
 
-Ces choix ne sont pas présentés comme validés à ce stade.
+Ces points restent à définir ; ils ne sont pas présentés comme validés.
 
 ## 5. Alternatives écartées et justification
 
@@ -225,11 +266,19 @@ Ces choix ne sont pas présentés comme validés à ce stade.
 - Service de supervision hébergé : non retenu comme socle principal,
   faute de fournisseur et de conditions validés ; un contrôle externe
   pourra être étudié pour couvrir l'indisponibilité totale du serveur.
-  
-Les autres alternatives seront ajoutées à l'issue des comparaisons
-sur l'infrastructure et les choix encore ouverts.
 
+### Infrastructure et déploiement
 
+- Scripts shell comme mécanisme principal : non retenus pour
+  la configuration de l'hôte ; Ansible est privilégié pour décrire
+  et rejouer cette configuration. Des scripts ciblés restent possibles.
+- Terraform : non retenu à ce stade, car aucun besoin ni droit
+  de création de ressources n'est confirmé ; le serveur sera fourni.
+- Kubernetes : non retenu pour la première architecture, faute
+  de cluster imposé ou de besoin multi-nœud confirmé.
+
+Les alternatives relatives aux choix encore ouverts seront ajoutées
+après comparaison et validation par l'équipe.
 
 ## 6. Risques et mesures envisagées
 
@@ -241,7 +290,10 @@ sur l'infrastructure et les choix encore ouverts.
 | Collecte accidentelle de contenus hors périmètre | Limiter les champs conservés aux titres, extraits, liens, dates et métadonnées techniques nécessaires ; exclure texte intégral, images, commentaires et profils. | Walter |
 | Édition absente à 7 h ou pipeline interrompu | Prévoir une marge avant publication, une procédure de relance et une alerte ; mesurer le respect de l'horaire. | Darrel / Yannick |
 | Perte des données ou environnement non reproductible | Prévoir un stockage persistant, des sauvegardes avec test de restauration et une infrastructure décrite en code ; ne pas versionner les données collectées ni les secrets dans Git. | Darrel |
+| Déploiement incompatible avec le serveur fourni | Confirmer le système, les ressources, les accès et les privilèges avant déploiement ; adapter les configurations sans masquer les changements d'architecture. | Darrel |
 | Regroupements peu pertinents ou difficiles à reproduire | Évaluer un échantillon annoté ; régler le seuil ; définir le traitement des textes vides et des publications isolées ; tracer les paramètres et versions. | Yannick |
+| Anciennes métriques interprétées comme une réussite du jour | Contrôler les dates de dernière exécution et de publication ; tester les métriques absentes et les résultats périmés. | Yannick |
+| Pipeline et supervision indisponibles simultanément | Documenter ce risque lié à l'hébergement commun ; étudier un contrôle externe si les conditions le permettent. | Darrel / Yannick |
 | Dépendance à un seul membre ou contributions incohérentes | Documenter chaque partie, faire relire les modifications par un autre membre et valider collectivement les décisions techniques. | Toute l'équipe |
 
 Ces mesures sont prévues au cadrage ; elles ne sont pas encore
