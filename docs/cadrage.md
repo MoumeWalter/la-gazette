@@ -73,9 +73,44 @@ Un rattrapage après 7 h restera comptabilisé comme un retard de publication.
 
 La compatibilité de l'infrastructure de production reste à confirmer.
 
+### Stockage — JSONL et SQLite
+
+Décision de l'équipe : conserver les métadonnées brutes autorisées
+dans des fichiers JSONL et les données nettoyées dans une base SQLite.
+
+JSONL permet de conserver les valeurs avant nettoyage et leur provenance,
+puis de rejouer les traitements sans effectuer une nouvelle collecte.
+Le stockage brut exclut le XML intégral, les images et le texte intégral
+des articles.
+
+SQLite est retenu pour interroger les articles propres, appliquer les
+contraintes d'unicité définies et gérer les thèmes et les éditions.
+L'architecture prévoit une exécution sur une machine unique et des
+écritures coordonnées, en tenant compte de la limite d'un écrivain
+simultané par base.
+
+En développement, le code et les données d'exécution seront placés dans
+le système de fichiers Linux de WSL 2. Chaque membre utilisera sa propre
+base de test ; les données collectées et les bases ne seront pas
+versionnées dans Git.
+
+En production, les données seront stockées de manière persistante,
+hors du cycle de vie des conteneurs. Les chemins seront configurables.
+Une procédure de sauvegarde et un test de restauration seront prévus.
+
+Ce choix est définitif pour la première architecture. Il devra être
+réexaminé si le projet exige ultérieurement plusieurs serveurs écrivains.
+
 ## 5. Alternatives ecartees et justification
 
-A completer.
+
+- Tout stocker en fichiers JSONL : non retenu pour les données propres,
+  afin de disposer de requêtes SQL et de contraintes d'unicité en base.
+- PostgreSQL : non retenu pour cette première architecture, qui prévoit
+  un serveur unique et des écritures coordonnées ; l'équipe privilégie
+  une exploitation initiale plus simple.
+- Parquet : non retenu comme stockage opérationnel principal ; aucun
+  besoin d'export analytique en colonnes ne le justifie à ce stade.
 
 ## 6. Risques et mesures envisagées
 
