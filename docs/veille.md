@@ -208,8 +208,121 @@ Prévoir :
 - Événements GitHub Actions, section schedule :
   https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
 
-## 3. Stocker les donnees brutes et propres
-A completer.
+## 3. Stocker les données brutes et propres
+
+### Besoin
+
+Conserver les métadonnées autorisées avant nettoyage pour permettre
+la traçabilité et le retraitement, puis stocker les données propres
+pour le regroupement par thèmes et la génération des éditions.
+
+Le stockage brut ne doit pas contenir le flux XML intégral, les images
+ou le texte intégral des articles. Seuls les champs autorisés et
+les métadonnées techniques nécessaires sont conservés.
+
+### Option A — Fichiers JSONL
+
+Principe :
+Conserver un objet JSON par ligne, dans des fichiers organisés
+par source et par collecte.
+
+Avantages :
+- Organisation simple pour les lots collectés.
+- Conservation des valeurs autorisées avant nettoyage.
+- Possibilité de relire les lots pour rejouer les traitements.
+
+Limites :
+- Déduplication et contrôles de cohérence à développer.
+- Recherche et jointures moins pratiques qu'avec une base SQL.
+- Gestion des fichiers, sauvegardes et rétention à prévoir.
+
+Décision :
+Retenir pour les métadonnées brutes autorisées.
+
+### Option B — SQLite
+
+Principe :
+Stocker les données nettoyées dans une base relationnelle locale.
+
+Avantages :
+- Pas de serveur de base de données à administrer.
+- Requêtes SQL pour sélectionner les articles et préparer les éditions.
+- Contraintes d'unicité pour éviter les doublons.
+- Adapté à un démarrage local avec peu d'écritures concurrentes.
+
+Limites :
+- Un seul écrivain à un instant donné par fichier de base.
+- Accès direct depuis plusieurs machines à éviter.
+- Sauvegarde cohérente et persistance du fichier à organiser.
+
+Décision :
+Retenir provisoirement pour les données propres, les thèmes
+et les éditions, avec écritures coordonnées sur une seule machine.
+
+### Option C — PostgreSQL
+
+Principe :
+Utiliser une base relationnelle serveur, avec possibilité de stocker
+des données semi-structurées dans des colonnes JSONB.
+
+Avantages :
+- Architecture client-serveur.
+- Stockage relationnel et possibilités de requêtes sur JSONB.
+- Indexation possible des données JSONB.
+
+Limites :
+- Service supplémentaire à configurer et surveiller.
+- Gestion des accès, sauvegardes et mises à jour à prévoir.
+- Complexité initiale supérieure à notre proposition locale.
+
+Décision :
+Ne pas retenir au démarrage.
+Réexaminer si plusieurs services doivent écrire simultanément
+ou accéder à une base commune depuis plusieurs machines.
+
+### Option D — Fichiers Parquet
+
+Principe :
+Stocker les données sous forme de fichiers en colonnes,
+avec compression.
+
+Avantages :
+- Adapté aux analyses de lots de données.
+- Format compressé pris en charge par de nombreux outils analytiques.
+
+Limites :
+- Ne fournit pas à lui seul les contraintes d'une base relationnelle.
+- Gestion des mises à jour, doublons et fichiers à organiser.
+- Pas nécessaire comme stockage principal pour notre première version.
+
+Décision :
+Ne pas retenir comme stockage principal initial.
+À réexaminer pour des exports analytiques si un besoin apparaît.
+
+### Recommandation provisoire
+
+Retenir JSONL pour les métadonnées brutes autorisées et SQLite
+pour les données nettoyées, les thèmes et les éditions.
+
+Conditions de validité :
+- Exécution sur une seule machine au démarrage.
+- Écritures coordonnées pour limiter la concurrence.
+- Stockage persistant indépendant du cycle de vie des conteneurs.
+- Sauvegardes et politique de rétention à définir.
+- Données collectées exclues du dépôt Git.
+- Droits de réutilisation des sources à clarifier avant exploitation.
+
+Ce choix sera validé collectivement avec le référent infrastructure
+avant d'être reporté dans la note de cadrage.
+
+### Sources
+
+- SQLite — Appropriate Uses :
+  https://www.sqlite.org/whentouse.html
+- PostgreSQL — JSON Types :
+  https://www.postgresql.org/docs/current/datatype-json.html
+- Apache Parquet — Présentation :
+  https://parquet.apache.org/
 
 ## 4. Regrouper les textes par themes
 A completer.
