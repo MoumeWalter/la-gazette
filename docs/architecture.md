@@ -42,15 +42,17 @@ flowchart LR
     PR --> G2[Grafana et alertes]
     P --> J[Journal structuré]
 
-    T -.-> S[Supervision]
-    S -.-> A
-    S -.-> B
-    S -.-> C
-    S -.-> D
-    S -.-> E
-    S -.-> F
-    S -.-> G
-    S -.-> H
+    T -.-> P
+    P -.-> M
+    P -.-> J
+    A -.-> J
+    B -.-> J
+    C -.-> J
+    D -.-> J
+    E -.-> J
+    F -.-> J
+    G -.-> J
+    H -.-> J
 ```
 
 ## 3. Composants et responsabilités
@@ -84,7 +86,8 @@ flowchart LR
 | Contrôle vers publication | Édition validée et métadonnées de publication | Fichiers HTML et manifeste |
 | Publication vers Nginx | Édition courante et archives datées | Répertoire persistant en lecture seule |
 | Pipeline vers supervision | Compteurs, statuts, durées, dates et erreurs | Pushgateway |
-| Services vers supervision | Métriques et journaux | Prometheus et journal structuré |
+| Supervision | Métriques collectées et alertes évaluées | Prometheus et Grafana |
+| Pipeline et services | Journaux techniques et structurés | Journaux applicatifs et journalctl |
 
 ## 5. Lieux d'exécution
 
