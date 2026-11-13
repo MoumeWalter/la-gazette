@@ -190,5 +190,6 @@ techniques sont validées collectivement.
 
 Documents associés :
 - docs/veille.md : comparaisons détaillées et références.
-- docs/architecture.md : six blocs, données échangées et lieux d'exécution.
+- docs/architecture.md : composants, données échangées, lieux d'exécution
+  et périmètre de publication.
 - sources.csv : sources, accès, conditions et vérifications.
