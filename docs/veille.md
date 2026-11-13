@@ -917,3 +917,176 @@ de toutes les bibliothèques associées.
   https://scikit-learn.org/stable/auto_examples/text/plot_document_clustering.html
 - scikit-learn — Classification hiérarchique :
   https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html
+
+## 8. Tester et livrer les modifications — CI/CD
+
+Responsable : Darrel.
+Relecture : Walter et Yannick.
+Statut : proposition à faire valider par Darrel et l'équipe.
+
+### Besoin
+
+Contrôler les modifications avant leur déploiement, produire
+une version identifiable de l'application et permettre
+un déploiement reproductible avec retour arrière.
+
+La CI/CD est distincte de la planification quotidienne :
+- la CI contrôle les modifications du projet ;
+- la livraison prépare une version déployable ;
+- le déploiement installe cette version ;
+- systemd déclenche l'exécution quotidienne du pipeline.
+
+### Option A — GitHub Actions
+
+Principe :
+Décrire les contrôles dans des workflows versionnés dans le dépôt.
+
+Avantages :
+- Intégration au dépôt GitHub déjà utilisé.
+- Exécution sur push et pull request.
+- Prise en charge des tests Python et de la construction d'images.
+- Résultats associés aux modifications du code.
+
+Limites :
+- Quotas, stockage des artefacts et conditions du compte à vérifier.
+- Dépendance à GitHub pour les contrôles hébergés.
+- Accès au serveur et secrets de déploiement à protéger.
+- Fonctionnalités de protection des environnements à vérifier
+  selon l'offre et la visibilité du dépôt.
+
+Avis proposé :
+Solution recommandée pour la CI et la préparation des versions.
+
+### Option B — GitLab CI/CD
+
+Principe :
+Décrire les contrôles et livraisons dans des pipelines GitLab.
+
+Avantages :
+- Automatisation des tests, constructions et déploiements.
+- Configuration versionnée.
+- Exécution sur des runners gérés ou auto-hébergés.
+
+Limites dans notre projet :
+- Dépôt principal actuellement sur GitHub.
+- Migration ou synchronisation supplémentaire à organiser.
+- Quotas et runners à vérifier.
+
+Avis proposé :
+Non privilégié pour éviter d'ajouter une seconde plateforme.
+
+### Option C — Jenkins
+
+Principe :
+Mettre en place un service Jenkins pour exécuter les pipelines.
+
+Avantages :
+- Automatisation des tests, constructions et déploiements.
+- Possibilité de maîtriser l'environnement d'exécution.
+
+Limites dans notre projet :
+- Service supplémentaire à héberger, sécuriser et maintenir.
+- Configuration des agents et accès à organiser.
+- Charge d'exploitation non justifiée pour la première architecture.
+
+Avis proposé :
+Non retenu au démarrage.
+
+### Option D — Contrôles manuels uniquement
+
+Principe :
+Lancer les vérifications et constructions depuis les postes de l'équipe.
+
+Avantages :
+- Aucun service CI supplémentaire.
+- Utile pour vérifier rapidement une modification avant un push.
+
+Limites :
+- Exécution non systématique.
+- Résultats dépendants du poste.
+- Risque d'oubli et preuves de contrôle dispersées.
+
+Avis proposé :
+Conserver les contrôles locaux en complément,
+mais pas comme seule validation avant livraison.
+
+### Stratégie proposée
+
+Retenir GitHub Actions pour :
+- installer l'environnement de test ;
+- exécuter les contrôles de qualité ;
+- exécuter les tests automatisés ;
+- valider les configurations concernées ;
+- construire l'image Docker.
+
+Le déploiement de production sera déclenché explicitement
+après réussite des contrôles et relecture.
+
+Ansible appliquera la configuration et la version choisie.
+Aucun déploiement automatique sur chaque push n'est retenu
+dans cette proposition initiale.
+
+### Contrôles envisagés
+
+- Tests unitaires du nettoyage, des dates et de la déduplication.
+- Tests des entrées invalides et champs absents.
+- Tests du regroupement sur un jeu de données maîtrisé.
+- Tests d'intégration avec une base SQLite temporaire.
+- Validation du fichier sources.csv.
+- Validation de la configuration Docker Compose.
+- Vérification syntaxique des playbooks Ansible.
+- Construction de l'image Docker.
+
+Les bibliothèques, commandes et versions seront définies au TD 2.
+
+Les tests ne dépendront pas systématiquement des flux de presse réels.
+Des exemples synthétiques ou des fixtures dont l'utilisation est
+autorisée permettront de tester sans dépendance réseau.
+
+### Livraison et déploiement
+
+- Identifier chaque version par le commit Git correspondant.
+- Utiliser une référence d'image identifiable et non uniquement latest.
+- Définir le registre d'images ou le mécanisme de transfert.
+- Vérifier ses conditions d'utilisation dans le budget nul.
+- Déployer avec Ansible après validation explicite.
+- Vérifier le fonctionnement après déploiement.
+- Documenter le retour à une version précédente.
+
+Le registre, le mode d'accès au serveur et l'automatisation exacte
+du déploiement restent à choisir après connaissance de l'hébergement.
+
+### Sécurité et budget
+
+- Ne pas stocker les secrets dans le dépôt.
+- Limiter les permissions des workflows et des accès au serveur.
+- Ne pas exposer les secrets de production aux contributions
+  non approuvées.
+- Maîtriser les versions des actions et dépendances utilisées.
+- Vérifier les quotas et éviter les dépenses automatiques.
+- Définir une rétention limitée des artefacts.
+
+### Vérifications prévues
+
+- Un test volontairement en échec bloque la livraison.
+- Un push ou une pull request déclenche les contrôles prévus.
+- La version construite est identifiable.
+- Un déploiement de test peut être vérifié et annulé.
+- Les modifications de données et de schéma sont prises en compte
+  dans la procédure de retour arrière.
+
+Aucun workflow, déploiement ou retour arrière n'est déclaré
+testé à ce stade.
+
+### Sources
+
+- GitHub Actions :
+  https://docs.github.com/articles/getting-started-with-github-actions
+- Tests Python :
+  https://docs.github.com/actions/guides/building-and-testing-python
+- Environnements de déploiement :
+  https://docs.github.com/en/actions/concepts/workflows-and-actions/deployment-environments
+- Comparaison avec GitLab CI/CD :
+  https://docs.github.com/actions/learn-github-actions/migrating-from-gitlab-cicd-to-github-actions
+- Comparaison avec Jenkins :
+  https://docs.github.com/actions/learn-github-actions/migrating-from-jenkins-to-github-actions
