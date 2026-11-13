@@ -110,8 +110,103 @@ La disponibilité d'API officielles propres aux journaux et les conditions
 de chaque flux restent à vérifier ; aucune vérification n'est déclarée
 comme réalisée à ce stade.
 
-## 2. Executer le pipeline chaque matin
-A completer.
+## 2. Exécuter le pipeline chaque matin
+
+Responsable : Darrel.
+Relecture : Yannick.
+Statut : proposition à valider collectivement.
+
+### Besoin
+
+Déclencher automatiquement les traitements assez tôt pour rendre
+l'édition disponible à 7 h, suivre leur résultat et permettre une relance
+contrôlée en cas d'échec.
+
+### Option A — Cron sur Linux
+
+Avantages :
+- Déclenchement léger d'une commande à heure fixe.
+- Configuration simple à versionner.
+
+Limites :
+- Cron standard ne rattrape pas une exécution manquée pendant l'arrêt
+  de la machine.
+- Les reprises, journaux, alertes et dépendances entre étapes
+  doivent être organisés séparément.
+
+Décision proposée :
+Alternative simple, non privilégiée face aux possibilités de suivi
+et de rattrapage offertes par systemd.
+
+### Option B — Timer systemd sur Linux
+
+Avantages :
+- Planification dans une unité timer associée à une unité service.
+- Rattrapage possible d'un déclenchement manqué avec Persistent=true.
+- Configuration déclarative pouvant être versionnée.
+
+Limites :
+- Nécessite une machine Linux utilisant systemd.
+- Ne fournit pas à lui seul un suivi détaillé des étapes du pipeline.
+- Un rattrapage après redémarrage ne rétablit pas le respect de 7 h
+  si l'édition aurait dû être publiée pendant l'arrêt.
+
+Décision proposée :
+Choix provisoire pour une infrastructure de production Linux compatible.
+
+### Option C — Apache Airflow
+
+Avantages :
+- Dépendances entre tâches décrites sous forme de graphe.
+- Interface de suivi, consultation des journaux et déclenchement manuel.
+- Adapté à une orchestration comportant plusieurs étapes distinctes.
+
+Limites :
+- Plusieurs composants à déployer et maintenir.
+- Base de métadonnées nécessaire.
+- Complexité supplémentaire à justifier pour ce projet.
+
+Décision proposée :
+Non retenu au démarrage ; à reconsidérer si les besoins d'orchestration
+dépassent une exécution séquentielle maîtrisée.
+
+### Option D — GitHub Actions planifié
+
+Avantages :
+- Configuration versionnée avec le projet.
+- Exécution possible sur un runner hébergé.
+
+Limites :
+- Déclenchements pouvant être retardés ou abandonnés sous forte charge.
+- Quotas et conditions de l'offre à vérifier.
+- Persistance des données et accès à la production à organiser.
+
+Décision proposée :
+Non retenu comme seul ordonnanceur de production pour l'édition de 7 h.
+Son éventuelle utilisation pour la CI sera évaluée séparément.
+
+### Recommandation et conditions de validation
+
+Privilégier un timer systemd si l'infrastructure fournie le permet.
+Confirmer ce choix collectivement après identification de l'hébergement.
+
+Prévoir :
+- une heure de déclenchement antérieure à 7 h, ajustée après mesure ;
+- un fuseau de publication explicitement défini ;
+- un identifiant et un statut pour chaque exécution ;
+- des tentatives de reprise bornées et des délais maximaux ;
+- une protection contre les exécutions concurrentes ;
+- une relance sans doublons ;
+- une alerte si l'édition n'est pas disponible à l'heure attendue.
+
+### Sources
+
+- systemd.timer :
+  https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html
+- Architecture Apache Airflow :
+  https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html
+- Événements GitHub Actions, section schedule :
+  https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
 
 ## 3. Stocker les donnees brutes et propres
 A completer.
