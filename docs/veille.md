@@ -18,6 +18,7 @@ Ils ne signifient pas que les composants sont déjà installés ou testés.
 | Infrastructure | Ansible, Docker et Docker Compose | Darrel |
 | Langage | Python | Walter / équipe |
 | CI/CD | GitHub Actions et déploiement contrôlé avec Ansible | Darrel |
+| Publication | Édition HTML statique et archives datées ; serveur de diffusion à confirmer | Walter / Darrel |
 
 Réserves transversales :
 - Les droits de réutilisation des sources restent à clarifier.
@@ -1114,7 +1115,9 @@ testé à ce stade.
 
 ### Décisions de cadrage encore ouvertes
 
-- Format de l'édition et mode de publication.
+- Serveur de diffusion de l'édition HTML, adresse de consultation,
+  modalités HTTPS et éventuelle restriction d'accès.
+- Durée de conservation et droits d'archivage des éditions.
 - Fuseau de référence de l'édition.
 - Conditions de réutilisation des sources encore non clarifiées.
 
@@ -1143,3 +1146,167 @@ testé à ce stade.
 
 Ces points seront suivis sans présenter les mesures prévues
 comme déjà mises en œuvre ou testées.
+
+## 9. Publier et archiver l'édition
+
+Responsable : Walter.
+Relecture : Darrel et Yannick.
+Statut : format HTML statique validé par l'équipe.
+Serveur de diffusion et modalités d'accès à confirmer.
+
+### Besoin
+
+Rendre l'édition quotidienne consultable à 7 h et conserver
+une archive datée, sans développer une interface élaborée.
+
+Présenter les thèmes, les sources et les liens vers les publications.
+Les extraits ne seront affichés que si les conditions de réutilisation
+le permettent.
+
+### Option A — Édition HTML statique
+
+Principe :
+Générer une page HTML avec Python à partir des données propres
+et des groupes thématiques.
+
+Avantages retenus pour le projet :
+- Lecture dans un navigateur.
+- Séparation entre génération et consultation.
+- Pas d'application dynamique nécessaire pour présenter l'édition.
+- Archivage sous forme de fichiers datés.
+
+Limites :
+- Serveur de diffusion et accès réseau à définir.
+- Publication cohérente des fichiers à organiser.
+- Traitement sécurisé des textes et liens à prévoir.
+- Gestion du cache et vérification de l'édition accessible à tester.
+
+Décision :
+Format retenu et validé par l'équipe.
+
+### Option B — Markdown
+
+Principe :
+Générer un document Markdown pour chaque édition.
+
+Avantages :
+- Format simple à produire et à relire.
+- Adapté à la documentation technique.
+
+Limites pour notre projet :
+- Consultation dépendante de l'outil de rendu.
+- Point d'accès quotidien moins direct pour le lecteur.
+- Diffusion à organiser malgré tout.
+
+Décision :
+Non retenu comme format principal de consultation.
+
+### Option C — PDF
+
+Principe :
+Générer un document PDF pour chaque édition.
+
+Avantages :
+- Document autonome.
+- Présentation conservée lors du partage.
+
+Limites pour notre projet :
+- Génération et contrôles supplémentaires.
+- Accès à la dernière édition à organiser.
+- Aucun besoin initial imposant ce format.
+
+Décision :
+Non retenu au démarrage.
+
+### Option D — Application web dynamique
+
+Principe :
+Calculer les pages à la demande avec une application web.
+
+Avantages recherchés :
+- Possibilité de recherche et d'interactions supplémentaires.
+
+Limites :
+- Fonctionnalités non nécessaires au périmètre initial.
+- Application et dépendances supplémentaires à exploiter.
+- Effort pouvant détourner l'équipe de la robustesse du pipeline.
+
+Décision :
+Non retenue pour la première architecture.
+
+### Format retenu
+
+Une édition HTML statique sera générée par Python.
+
+Elle présentera :
+- la date de l'édition ;
+- l'heure réelle de publication ;
+- les groupes thématiques et leurs libellés ;
+- les titres, les journaux, les dates et les liens ;
+- les extraits uniquement si leur diffusion est autorisée ;
+- les éventuelles limites de couverture ;
+- un accès aux archives datées.
+
+Aucune interface élaborée, aucun commentaire et aucun suivi
+des lecteurs ne seront ajoutés.
+
+### Organisation envisagée
+
+- Une page d'accueil pour la dernière édition publiée.
+- Un répertoire d'archive par date.
+- Des fichiers persistants, distincts des données internes.
+- Un accès en lecture seule aux fichiers pour le serveur de diffusion.
+
+Le serveur de diffusion reste à confirmer.
+Nginx est la solution proposée, mais n'est pas déclaré validé
+dans ce document.
+
+L'adresse de consultation, les modalités HTTPS et une éventuelle
+restriction d'accès dépendront de l'infrastructure fournie
+et des droits de réutilisation.
+
+### Publication et contrôles prévus
+
+1. Générer une édition candidate hors de l'emplacement publié.
+2. Vérifier la date de l'édition et les champs nécessaires.
+3. Contrôler la fraîcheur de chaque article au moment de publication.
+4. Écarter les dates futures, non exploitables ou âgées de 24 h ou plus.
+5. Vérifier les liens et l'absence de contenu hors périmètre.
+6. Publier uniquement une édition validée, sans exposer un fichier
+   partiellement écrit.
+7. Vérifier l'accès à l'édition effectivement attendue.
+8. Enregistrer le résultat et l'heure réelle de publication.
+
+Les textes et liens des sources seront traités comme des entrées
+non fiables. L'échappement HTML et la validation des liens
+seront prévus.
+
+Le succès de la génération ne suffira pas à déclarer la publication
+réussie.
+
+### Échecs et archives
+
+Une édition invalide ne remplacera pas la dernière édition publiée.
+
+La date restera visible pour qu'une ancienne édition ne soit pas
+présentée comme celle du jour. Une alerte signalera l'édition manquante.
+
+Les archives seront clairement identifiées comme historiques.
+La contrainte de fraîcheur s'applique au moment de la publication.
+
+La durée de conservation et les droits d'archivage restent à définir.
+Aucune diffusion publique ne sera engagée sans clarification
+des conditions applicables.
+
+### Tests prévus
+
+- Génération à partir de données synthétiques.
+- Affichage des accents et caractères spéciaux.
+- Absence d'interprétation de HTML provenant des sources.
+- Rejet des dates non admissibles.
+- Échec sans remplacement de l'édition précédente.
+- Accès à l'édition attendue et aux archives.
+- Contrôle du cache et de la date de l'édition accessible.
+- Absence d'exposition des fichiers JSONL, de SQLite et des secrets.
+
+Aucun mécanisme de publication n'est déclaré réalisé ni testé.

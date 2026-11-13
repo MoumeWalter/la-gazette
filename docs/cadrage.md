@@ -13,6 +13,7 @@ Choix validés :
 - Ansible, Docker et Docker Compose pour le déploiement ;
 - GitHub Actions pour la CI et la préparation des versions,
   avec déploiement explicitement déclenché après validation.
+- Édition HTML statique générée par Python, avec archives datées.
 
 Les droits de réutilisation des sources et la compatibilité
 de l'infrastructure fournie restent à clarifier.
@@ -256,10 +257,41 @@ GitHub Actions n'est pas utilisé comme ordonnanceur de l'édition de 7 h.
 Le registre ou le transfert des images, les quotas, les accès au serveur
 et la procédure de retour arrière restent à préciser et à tester.
 
+### Livraison — édition HTML statique
+
+Choix validé par l'équipe : générer avec Python une édition HTML
+statique présentant les thèmes, les titres, les sources, les dates
+et les liens vers les publications.
+
+Les extraits ne seront affichés que si leur diffusion est autorisée.
+Aucune interface élaborée ni aucun suivi des lecteurs ne seront ajoutés.
+
+Une page donnera accès à la dernière édition publiée et à des archives
+datées. La date de l'édition et l'heure réelle de publication
+seront visibles.
+
+L'édition candidate sera contrôlée avant publication :
+fraîcheur des articles, champs nécessaires, liens et contenu autorisé.
+Une génération réussie ne suffira pas à déclarer la publication réussie ;
+l'édition effectivement accessible devra également être vérifiée.
+
+Une édition invalide ne remplacera pas la dernière édition publiée.
+Une ancienne édition restera identifiable et déclenchera une alerte
+si l'édition du jour est absente.
+
+Le serveur de diffusion reste à confirmer ; Nginx est proposé.
+L'adresse de consultation, les modalités HTTPS, les restrictions d'accès
+et la rétention des archives restent à définir selon l'infrastructure
+et les droits de réutilisation.
+
+La publication et ses contrôles ne sont pas encore implémentés.
+
 ### Points restant à préciser
 
 Décisions de cadrage :
-- Format et mode de publication de l'édition.
+- Serveur de diffusion HTML, adresse de consultation, modalités HTTPS
+  et éventuelle restriction d'accès.
+- Durée de conservation et droits d'archivage des éditions.
 - Fuseau de référence de l'édition.
 
 Paramètres de réalisation :
@@ -356,6 +388,15 @@ Ces points restent ouverts ; ils ne sont pas présentés comme validés.
 
 Les alternatives relatives à la publication seront ajoutées
 après comparaison et validation par l'équipe.
+
+### Livraison
+
+- Markdown : non retenu comme format principal pour privilégier
+  une consultation directe dans un navigateur.
+- PDF : non retenu au démarrage, faute de besoin justifiant
+  une génération et des contrôles supplémentaires.
+- Application web dynamique : non retenue pour limiter les composants
+  et rester concentré sur l'exploitation du pipeline.
 
 ## 6. Risques et mesures envisagées
 
