@@ -1,0 +1,14 @@
+# Secrets et configuration locale
+.env
+.env.*
+!.env.example
+
+# Environnements et caches Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Fichiers locaux
+.DS_Store
+Thumbs.db
