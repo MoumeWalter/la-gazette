@@ -59,6 +59,19 @@ A completer.
 
 A completer.
 
-## 7. Equipe et repartition des roles
+## 7. Équipe et répartition des rôles
 
-A completer.
+- Walter — Référent données et coordination :
+  sélection et documentation des sources, collecte, nettoyage,
+  qualité et stockage des données ; consolidation des livrables.
+
+- Darrel — Référent infrastructure et automatisation :
+  conteneurisation, CI/CD, ordonnancement et infrastructure en code.
+
+- Yannick — Référent MLOps et observabilité :
+  regroupement par thèmes, évaluation et versionnement du modèle,
+  métriques, journaux et alertes.
+
+Chaque membre documente et teste sa partie. Les choix techniques
+sont validés collectivement et les contributions sont relues par
+un autre membre.
