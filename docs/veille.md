@@ -208,6 +208,20 @@ Prévoir :
 - Événements GitHub Actions, section schedule :
   https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
 
+### Décision de l'équipe
+
+Darrel valide le choix d'un timer systemd pour la cible de production,
+sous réserve que le serveur fourni utilise Linux avec systemd et permette
+le déploiement des unités nécessaires.
+
+Les PC Windows de l'équipe utiliseront WSL 2 pour développer et tester
+la configuration. La production devra fonctionner sur une infrastructure
+disponible en continu.
+
+La planification devra permettre de terminer les traitements avant
+la publication de l'édition à 7 h. La marge de traitement, le fuseau
+de référence et la gestion des échecs restent à préciser.
+
 ## 3. Stocker les données brutes et propres
 
 ### Besoin

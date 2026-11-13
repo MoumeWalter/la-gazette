@@ -49,7 +49,29 @@ identifier les éventuels incidents.
 
 ## 4. Stack retenue et justification
 
-A completer apres la veille technique.
+### Ordonnancement — timer systemd
+
+Choix validé par Darrel : retenir un timer systemd pour la production,
+sous réserve que l'infrastructure fournie soit un serveur Linux utilisant
+systemd et permette le déploiement des unités nécessaires.
+
+Ce choix convient à un pipeline quotidien exécuté sur un serveur unique :
+la planification est décrite dans une unité .timer et l'exécution dans
+une unité .service. Ces fichiers seront versionnés dans le dépôt.
+
+L'équipe utilise des PC Windows avec WSL 2 pour développer et tester
+les unités dans un environnement Linux compatible. WSL reste un
+environnement de développement et de test, pas une garantie de
+disponibilité pour l'édition quotidienne.
+
+Le traitement sera déclenché avant 7 h avec une marge fondée sur
+sa durée mesurée. Le fuseau de référence, la gestion des échecs,
+les alertes et les procédures de relance seront explicitement définis.
+
+Persistent=true sera envisagé pour rattraper une échéance manquée.
+Un rattrapage après 7 h restera comptabilisé comme un retard de publication.
+
+La compatibilité de l'infrastructure de production reste à confirmer.
 
 ## 5. Alternatives ecartees et justification
 
