@@ -1,228 +1,227 @@
 # Veille technique — TD 1
 
-Comparer les options, leurs limites et justifier les décisions.
-Les références consultées sont indiquées dans chaque section.
+## Synthèse
+
+Cette veille compare les solutions envisagées pour La gazette,
+leurs limites et les raisons des choix retenus.
+
+Les choix décrivent la première architecture cible.
+Ils ne signifient pas que les composants sont déjà installés ou testés.
+
+| Sujet | Choix retenu | Responsable |
+|---|---|---|
+| Collecte | Flux RSS des éditeurs | Walter |
+| Planification | Timer systemd | Darrel |
+| Stockage | JSONL pour le brut autorisé ; SQLite pour le propre | Walter |
+| Thèmes | TF-IDF et classification hiérarchique à distance cosinus | Yannick |
+| Supervision | Prometheus, Pushgateway, Grafana et journaux structurés | Yannick |
+| Infrastructure | Ansible, Docker et Docker Compose | Darrel |
+
+Réserves transversales :
+- Les droits de réutilisation des sources restent à clarifier.
+- Le système, les ressources et les accès du serveur fourni
+  restent à confirmer.
+- WSL 2 constitue l'environnement de développement et de test,
+  pas la cible de production disponible en continu.
+- Les paramètres opérationnels seront précisés et testés
+  lors des TD suivants.
 
 ## 1. Récupérer les publications de presse
 
 Responsable : Walter.
 Relecture : Darrel.
-Statut : collecte par flux RSS retenue ; vérifications techniques
-terminées pour huit sources ; conditions de réutilisation à finaliser.
+Statut : collecte RSS retenue ; huit flux inspectés manuellement ;
+conditions de réutilisation à finaliser.
 
-### Objectif
+### Besoin
 
 Récupérer les titres, extraits, liens et dates des publications
-d'au moins quatre PQR et quatre PQN, dans le respect des conditions
-des éditeurs, sans collecter le texte intégral.
+d'au moins quatre PQR et quatre PQN, sans collecter le texte intégral
+et dans le respect des conditions des éditeurs.
 
 ### Option A — Flux RSS/Atom des éditeurs
 
 Principe :
-Lire les flux de syndication directement publiés par les journaux.
+Lire les flux de syndication publiés directement par les journaux.
 
 Avantages :
-- Publications accessibles sous une forme structurée.
+- Publications structurées.
 - Accès direct aux sources sélectionnées.
-- Possibilité de ne conserver que les champs autorisés par le projet.
+- Sélection des seuls champs autorisés.
 
 Limites :
-- Disponibilité et contenu des flux à contrôler.
+- Disponibilité et contenu variables selon les flux.
 - Dates ou extraits potentiellement absents.
-- Fréquence de mise à jour et profondeur du flux variables.
+- Articles anciens pouvant rester présents dans un flux récent.
 - Conditions de réutilisation à examiner pour chaque source.
-- Présence possible de contenu hors périmètre, à exclure du stockage
-  et des journaux.
+- Contenu hors périmètre à exclure du stockage et des journaux.
 
 Décision :
-Retenir les flux RSS des éditeurs comme mode de collecte.
-Les huit sources ont été inspectées manuellement et les résultats
-sont consignés dans sources.csv. Les droits de réutilisation restent
-à clarifier avant exploitation.
+Retenir les flux RSS des éditeurs.
+Les huit sources ont été inspectées manuellement et les observations
+sont consignées dans sources.csv.
 
 ### Option B — API officielle d'un éditeur
 
 Principe :
-Utiliser une interface documentée proposée directement par un journal.
+Utiliser une interface documentée proposée par un journal.
 
 Avantages :
-- Accès structuré lorsqu'une API est disponible.
-- Documentation permettant d'identifier les champs et modalités d'accès.
+- Accès structuré lorsqu'une API existe.
+- Documentation des champs et modalités d'accès.
 
 Limites :
 - Existence et accessibilité à vérifier pour chaque journal.
 - Authentification, quotas ou coûts possibles.
-- Intégrations potentiellement différentes selon les éditeurs.
+- Intégrations différentes selon les éditeurs.
 
 Décision :
-Non retenue comme solution principale : l'accès adapté aux huit sources
-et au budget nul n'est pas confirmé.
+Non retenue : aucun accès adapté aux huit sources et au budget nul
+n'a été confirmé.
 
 ### Option C — API d'un agrégateur de presse
 
 Principe :
-Interroger un service centralisant les publications de plusieurs médias.
+Interroger un service centralisant plusieurs médias.
 
 Avantages :
-- Point d'accès commun à plusieurs sources.
-- Recherche et filtrage selon les possibilités du fournisseur.
+- Point d'accès commun.
+- Recherche et filtres selon le fournisseur.
 
 Limites :
-- Couverture des quatre PQR et quatre PQN à confirmer.
-- Présence des extraits et dates de publication à vérifier.
-- Quotas, fraîcheur et conditions d'utilisation variables.
-- Dépendance à un intermédiaire supplémentaire.
-- Gratuité en développement ne signifie pas gratuité en production.
+- Couverture des huit journaux à vérifier.
+- Présence des extraits et dates à contrôler.
+- Quotas, fraîcheur et conditions variables.
+- Dépendance à un intermédiaire.
+- Gratuité en développement ne garantissant pas l'usage en production.
 
 Décision :
-Non retenue : son adéquation à la couverture, à la fraîcheur
-et au budget du projet n'est pas établie.
+Non retenue : adéquation au périmètre et au budget non établie.
 
 ### Option D — Extraction des pages HTML
 
 Principe :
-Extraire les métadonnées directement depuis les pages web des journaux.
+Extraire les métadonnées depuis les pages des journaux.
 
 Limites :
 - Extraction des pages non retenue dans notre périmètre.
 - Scraping du texte intégral explicitement exclu.
-- Aucun texte intégral ne doit être collecté ou stocké.
 
 Décision :
-Option écartée ; utiliser les flux publiés par les éditeurs.
+Option écartée au profit des flux publiés par les éditeurs.
 
-### Choix retenu et justification
+### Choix retenu et conditions
 
-Les flux RSS des éditeurs sont retenus pour récupérer les métadonnées
-nécessaires sans extraire les pages des articles.
+Les flux RSS permettent de récupérer les métadonnées nécessaires
+sans extraire les pages des articles.
 
-Les huit flux sélectionnés ont été inspectés manuellement :
-titres, extraits, liens, dates et publications du jour ont été observés.
-Les adresses et les résultats sont documentés dans sources.csv.
+Les titres, extraits, liens, dates et publications du jour ont été
+observés dans les huit flux. Ces observations ne garantissent pas
+la présence future de tous les champs.
 
-La fraîcheur de chaque item doit être contrôlée : un flux récent
-peut également contenir des articles anciens.
+La date de chaque item sera contrôlée indépendamment de celle du flux.
 
-Cette vérification technique ne vaut pas autorisation de réutilisation.
-Les restrictions connues et les conditions restant à clarifier sont
-consignées dans sources.csv. Une source incompatible avec l'usage prévu
-devra être remplacée ou faire l'objet d'une autorisation adaptée.
+La vérification technique ne vaut pas autorisation de réutilisation.
+Les restrictions sont documentées dans sources.csv.
+Toute source incompatible devra être remplacée ou faire l'objet
+d'une autorisation adaptée avant exploitation.
 
 ### Sources
 
-- Spécification RSS :
+- RSS :
   https://cyber.harvard.edu/rss/rss.html
-- Spécification Atom :
+- Atom :
   https://datatracker.ietf.org/doc/html/rfc4287
-- Exemple d'API d'agrégation — GDELT DOC :
+- GDELT DOC :
   https://blog.gdeltproject.org/gdelt-doc-2-0-api-debuts/
-- Exemple de conditions commerciales d'une API — NewsAPI :
+- NewsAPI :
   https://newsapi.org/pricing
-
-La disponibilité d'API officielles propres aux journaux n'a pas été
-confirmée. Les vérifications techniques des huit flux RSS sont terminées ;
-les vérifications des conditions de réutilisation restent à finaliser.
 
 ## 2. Exécuter le pipeline chaque matin
 
 Responsable : Darrel.
 Relecture : Yannick.
-Statut : choix du timer systemd validé par Darrel pour la cible
-de production ; compatibilité de l'infrastructure fournie à confirmer.
+Statut : timer systemd validé par Darrel ;
+compatibilité du serveur à confirmer.
 
 ### Besoin
 
-Déclencher automatiquement les traitements assez tôt pour rendre
-l'édition disponible à 7 h, suivre leur résultat et permettre une relance
-contrôlée en cas d'échec.
+Déclencher les traitements assez tôt pour publier l'édition à 7 h,
+suivre leur résultat et permettre une relance contrôlée.
 
 ### Option A — Cron sur Linux
 
 Avantages :
-- Déclenchement léger d'une commande à heure fixe.
+- Déclenchement léger à heure fixe.
 - Configuration simple à versionner.
 
 Limites :
-- Cron standard ne rattrape pas une exécution manquée pendant l'arrêt
-  de la machine.
-- Les reprises, journaux, alertes et dépendances entre étapes
-  doivent être organisés séparément.
+- Cron standard ne rattrape pas une échéance manquée pendant un arrêt.
+- Journaux, reprises, alertes et dépendances à organiser séparément.
 
 Décision :
-Alternative non retenue pour la première architecture ;
-l'équipe privilégie la gestion par unités systemd et le rattrapage
-possible des échéances manquées.
+Non retenu au profit de la gestion par unités systemd
+et du rattrapage possible des échéances.
 
-### Option B — Timer systemd sur Linux
+### Option B — Timer systemd
 
 Avantages :
-- Planification dans une unité .timer associée à une unité .service.
-- Rattrapage possible d'un déclenchement manqué avec Persistent=true.
-- Configuration déclarative pouvant être versionnée.
+- Unité .timer associée à une unité .service.
+- Rattrapage possible avec Persistent=true.
+- Configuration versionnable.
 
 Limites :
-- Nécessite une machine Linux utilisant systemd.
-- Ne fournit pas à lui seul un suivi détaillé des étapes du pipeline.
-- Un rattrapage après redémarrage ne rétablit pas le respect de 7 h
-  si l'édition aurait dû être publiée pendant l'arrêt.
-- Le rattrapage d'une échéance ne remplace pas une politique de reprise
-  après échec du traitement.
+- Nécessite Linux avec systemd.
+- Ne fournit pas seul le suivi métier des étapes.
+- Un rattrapage tardif ne rétablit pas le respect de 7 h.
+- Le rattrapage d'une échéance ne remplace pas une reprise après échec.
 
 Décision :
-Timer systemd retenu pour la cible de production, sous réserve
-que le serveur fourni utilise systemd et permette le déploiement
-des unités nécessaires.
+Retenu pour la production, sous réserve des caractéristiques
+et des droits disponibles sur le serveur fourni.
 
 ### Option C — Apache Airflow
 
 Avantages :
-- Dépendances entre tâches décrites sous forme de graphe.
-- Interface de suivi, consultation des journaux et déclenchement manuel.
-- Adapté à une orchestration comportant plusieurs étapes distinctes.
+- Dépendances entre tâches décrites par un graphe.
+- Interface de suivi, journaux et déclenchements manuels.
 
 Limites :
-- Plusieurs composants à déployer et maintenir.
+- Plusieurs composants à exploiter.
 - Base de métadonnées nécessaire.
-- Complexité supplémentaire à justifier pour ce projet.
+- Complexité supplémentaire pour notre première architecture.
 
 Décision :
-Non retenu au démarrage ; à reconsidérer si les besoins d'orchestration
-dépassent une exécution séquentielle maîtrisée.
+Non retenu au démarrage ; à réexaminer si l'orchestration dépasse
+une exécution séquentielle maîtrisée.
 
 ### Option D — GitHub Actions planifié
 
 Avantages :
-- Configuration versionnée avec le projet.
-- Exécution possible sur un runner hébergé.
+- Configuration versionnée.
+- Possibilité de runner hébergé.
 
 Limites :
 - Déclenchements pouvant être retardés ou abandonnés sous forte charge.
-- Quotas et conditions de l'offre à vérifier.
-- Persistance des données et accès à la production à organiser.
+- Quotas et conditions à vérifier.
+- Persistance et accès à la production à organiser.
 
 Décision :
-Non retenu comme seul ordonnanceur de production pour l'édition de 7 h.
-Son éventuelle utilisation pour la CI sera évaluée séparément.
+Non retenu comme seul ordonnanceur pour l'échéance de 7 h.
+Son utilisation éventuelle pour la CI reste à évaluer séparément.
 
-### Choix retenu et conditions de mise en œuvre
+### Choix retenu et conditions
 
-Retenir un timer systemd pour la production.
-Confirmer la compatibilité du serveur lorsque l'infrastructure
-sera communiquée.
-
-Prévoir :
-- une heure de déclenchement antérieure à 7 h, ajustée après mesure ;
-- un fuseau de publication explicitement défini ;
-- un identifiant et un statut pour chaque exécution ;
-- des tentatives de reprise bornées et des délais maximaux ;
+Retenir systemd et prévoir :
+- un déclenchement avant 7 h avec une marge fondée sur les mesures ;
+- un fuseau de publication explicite ;
+- un identifiant et un statut par exécution ;
+- des reprises bornées et des délais maximaux ;
 - une protection contre les exécutions concurrentes ;
 - une relance sans doublons ;
-- une alerte si l'édition n'est pas disponible à l'heure attendue.
+- une alerte si l'édition attendue est absente.
 
-Les PC Windows de l'équipe utiliseront WSL 2 pour développer et tester
-la configuration avec systemd activé.
-
-WSL reste un environnement de développement et de test.
+Les tests locaux utiliseront WSL 2 avec systemd activé.
 La production devra fonctionner sur une infrastructure disponible
 en continu.
 
@@ -230,509 +229,597 @@ en continu.
 
 - systemd.timer :
   https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html
-- Architecture Apache Airflow :
+- Apache Airflow :
   https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/overview.html
-- Événements GitHub Actions, section schedule :
+- GitHub Actions, schedule :
   https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
-- Microsoft — systemd dans WSL :
+- systemd dans WSL :
   https://learn.microsoft.com/en-us/windows/wsl/systemd
 
 ## 3. Stocker les données brutes et propres
 
 Responsable : Walter.
 Relecture : Darrel.
-Statut : JSONL et SQLite validés pour la première architecture.
+Statut : JSONL et SQLite validés.
 
 ### Besoin
 
 Conserver les métadonnées autorisées avant nettoyage pour permettre
 la traçabilité et le retraitement, puis stocker les données propres
-pour le regroupement par thèmes et la génération des éditions.
+pour les thèmes et les éditions.
 
-Le stockage brut ne doit pas contenir le flux XML intégral, les images
-ou le texte intégral des articles. Seuls les champs autorisés et
-les métadonnées techniques nécessaires sont conservés.
+Le brut n'est pas une copie intégrale du XML :
+images et texte intégral sont exclus.
 
 ### Option A — Fichiers JSONL
 
-Principe :
-Conserver un objet JSON par ligne, dans des fichiers organisés
-par source et par collecte.
-
 Avantages :
-- Organisation simple pour les lots collectés.
+- Un objet JSON par ligne.
 - Conservation des valeurs autorisées avant nettoyage.
-- Possibilité de relire les lots pour rejouer les traitements.
+- Relecture des lots pour rejouer les traitements.
 
 Limites :
-- Déduplication et contrôles de cohérence à développer.
-- Recherche et jointures moins pratiques qu'avec une base SQL.
-- Gestion des fichiers, sauvegardes et rétention à prévoir.
+- Déduplication et cohérence à développer.
+- Requêtes et jointures moins pratiques qu'en base SQL.
+- Gestion des fichiers et de leur rétention à prévoir.
 
 Décision :
 Retenir pour les métadonnées brutes autorisées.
 
 ### Option B — SQLite
 
-Principe :
-Stocker les données nettoyées dans une base relationnelle locale.
-
 Avantages :
-- Pas de serveur de base de données à administrer.
-- Requêtes SQL pour sélectionner les articles et préparer les éditions.
-- Contraintes d'unicité pour éviter les doublons.
-- Adapté à un démarrage local avec peu d'écritures concurrentes.
+- Pas de serveur de base à administrer.
+- Requêtes SQL.
+- Contraintes d'unicité.
+- Adaptation à une exécution locale avec peu d'écritures concurrentes.
 
 Limites :
-- Un seul écrivain à un instant donné par fichier de base.
+- Un seul écrivain à la fois par base.
 - Accès direct depuis plusieurs machines à éviter.
-- Sauvegarde cohérente et persistance du fichier à organiser.
+- Persistance et sauvegarde cohérente à organiser.
 
 Décision :
-Retenir SQLite pour les données propres, les thèmes et les éditions,
-avec écritures coordonnées sur une seule machine.
+Retenir pour les données propres, les thèmes et les éditions,
+avec écritures coordonnées sur une machine unique.
 
 ### Option C — PostgreSQL
 
-Principe :
-Utiliser une base relationnelle serveur, avec possibilité de stocker
-des données semi-structurées dans des colonnes JSONB.
-
 Avantages :
 - Architecture client-serveur.
-- Stockage relationnel et possibilités de requêtes sur JSONB.
-- Indexation possible des données JSONB.
+- Stockage relationnel et JSONB.
+- Possibilités d'indexation de JSONB.
 
 Limites :
-- Service supplémentaire à configurer et surveiller.
-- Gestion des accès, sauvegardes et mises à jour à prévoir.
-- Complexité initiale supérieure à notre proposition locale.
+- Service supplémentaire à configurer et exploiter.
+- Accès, sauvegardes et mises à jour à organiser.
+- Complexité supérieure à la solution locale envisagée.
 
 Décision :
-Ne pas retenir au démarrage.
-Réexaminer si plusieurs services doivent écrire simultanément
-ou accéder à une base commune depuis plusieurs machines.
+Non retenu au démarrage.
+À réexaminer si des accès distribués ou davantage d'écritures
+concurrentes deviennent nécessaires.
 
-### Option D — Fichiers Parquet
-
-Principe :
-Stocker les données sous forme de fichiers en colonnes,
-avec compression.
+### Option D — Parquet
 
 Avantages :
-- Adapté aux analyses de lots de données.
-- Format compressé pris en charge par de nombreux outils analytiques.
+- Format en colonnes avec compression.
+- Adapté aux analyses par lots.
 
 Limites :
-- Ne fournit pas à lui seul les contraintes d'une base relationnelle.
-- Gestion des mises à jour, doublons et fichiers à organiser.
-- Pas nécessaire comme stockage principal pour notre première version.
+- Ne fournit pas seul les contraintes d'une base relationnelle.
+- Mises à jour, doublons et fichiers à gérer.
+- Aucun besoin initial justifiant ce stockage principal.
 
 Décision :
-Ne pas retenir comme stockage principal initial.
-À réexaminer pour des exports analytiques si un besoin apparaît.
+Non retenu comme stockage opérationnel principal.
+À réexaminer pour des exports analytiques.
 
-### Choix retenu et justification
+### Choix retenu et conditions
 
-Retenir JSONL pour les métadonnées brutes autorisées et SQLite
-pour les données nettoyées, les thèmes et les éditions.
+JSONL conserve les valeurs avant nettoyage.
+SQLite permet les requêtes et les contraintes sur les données propres.
 
-JSONL conserve les valeurs avant nettoyage et facilite le retraitement.
-SQLite répond aux besoins de requêtes et d'unicité des données propres.
+Prévoir :
+- des écritures coordonnées ;
+- un stockage persistant hors du cycle de vie des conteneurs ;
+- des sauvegardes et tests de restauration ;
+- une politique de rétention ;
+- l'exclusion des données et bases du dépôt Git.
 
-Conditions de mise en œuvre :
-- Exécution sur une seule machine au démarrage.
-- Écritures coordonnées pour limiter la concurrence.
-- Stockage persistant indépendant du cycle de vie des conteneurs.
-- Sauvegardes, restauration et politique de rétention à définir.
-- Données collectées et bases exclues du dépôt Git.
-- Droits de réutilisation des sources à clarifier avant exploitation.
+Sous WSL 2, le code et les données d'exécution seront placés dans
+le système de fichiers Linux. Chaque membre utilisera ses données
+de test locales.
 
-En développement, le code et les données d'exécution seront placés
-dans le système de fichiers Linux de WSL 2. Chaque membre disposera
-de ses données de test locales.
-
-Les mesures de persistance, de sauvegarde et de restauration restent
-à mettre en œuvre et à tester lors des TD suivants.
+Ces mesures restent à réaliser et à tester.
 
 ### Sources
 
 - JSON Lines :
   https://jsonlines.org/
-- SQLite — Appropriate Uses :
+- SQLite :
   https://www.sqlite.org/whentouse.html
-- PostgreSQL — JSON Types :
+- PostgreSQL JSON :
   https://www.postgresql.org/docs/current/datatype-json.html
-- Apache Parquet :
+- Parquet :
   https://parquet.apache.org/
-- Microsoft — Systèmes de fichiers Windows et Linux :
+- Fichiers Windows et Linux :
   https://learn.microsoft.com/en-us/windows/wsl/filesystems
 
 ## 4. Regrouper les textes par thèmes
 
 Responsable : Yannick.
 Relecture : Walter.
-Statut : approche TF-IDF avec regroupement hiérarchique à distance
-cosinus validée par Yannick pour la première architecture.
-Les paramètres et la qualité des résultats restent à évaluer.
+Statut : TF-IDF et classification hiérarchique à distance cosinus
+validés par Yannick ; paramètres et performances à évaluer.
 
 ### Besoin
 
-Regrouper les publications du jour traitant de sujets proches,
-à partir des titres et extraits autorisés, sans récupérer le texte
-intégral et sans générer de résumés avec un LLM.
+Regrouper les publications par sujets proches à partir des titres
+et extraits autorisés, sans texte intégral ni résumé généré par LLM.
 
-L'édition doit présenter les groupes, leurs sources et les liens
-vers les publications.
+Présenter les groupes avec leurs sources et liens.
 
 ### Option A — Règles et mots-clés
 
-Principe :
-Définir des listes de mots et des règles pour affecter les publications
-à des thèmes préparés par l'équipe.
-
 Avantages :
-- Décisions faciles à expliquer.
-- Point de comparaison simple pour évaluer les autres approches.
+- Décisions explicables.
+- Référence simple pour l'évaluation.
 
 Limites :
-- Règles à entretenir.
-- Difficulté à couvrir les nouveaux sujets et les formulations variées.
-- Catégories générales pouvant mélanger des événements distincts.
+- Entretien manuel.
+- Couverture limitée des nouveaux sujets et formulations.
+- Risque de mélanger plusieurs événements dans une catégorie générale.
 
 Décision :
-Ne pas retenir comme méthode principale.
-Conserver comme référence simple pour l'évaluation.
+Non retenus comme méthode principale ; conservés comme référence.
 
 ### Option B — TF-IDF et K-means
 
-Principe :
-Représenter les titres et extraits en vecteurs TF-IDF,
-puis répartir les publications dans un nombre choisi de groupes.
-
 Avantages :
-- Approche documentée pour le regroupement de textes.
-- Termes caractéristiques utilisables pour examiner les groupes.
+- Approche documentée de regroupement de textes.
+- Termes caractéristiques disponibles pour examiner les groupes.
 
 Limites :
-- Nombre de groupes à déterminer.
+- Nombre de groupes à choisir.
 - Sensibilité à l'initialisation.
-- Difficultés possibles sur des textes courts et de grande dimension.
-- Similarité lexicale ne garantissant pas un même sujet.
+- Difficultés possibles avec les textes courts.
+- Proximité lexicale ne garantissant pas un même sujet.
 
 Décision :
-Ne pas retenir comme méthode principale.
-Conserver comme alternative expérimentale.
+Non retenu comme méthode principale ; conservé comme alternative
+expérimentale.
 
-### Option C — TF-IDF et regroupement hiérarchique
+### Option C — TF-IDF et classification hiérarchique
 
 Principe :
-Représenter les titres et extraits avec TF-IDF, puis regrouper
-les publications par distance cosinus avec un seuil de distance.
+Utiliser la distance cosinus, une liaison moyenne et un seuil
+de distance évalué, avec n_clusters=None.
 
-La configuration envisagée utilise une liaison moyenne,
-n_clusters=None et un distance_threshold à déterminer par évaluation.
 Le linkage Ward ne sera pas utilisé avec la distance cosinus.
 
 Avantages :
-- Pas de nombre fixe de groupes à imposer chaque matin.
-- Seuil permettant d'ajuster le niveau de rapprochement.
+- Nombre de groupes variable selon les publications.
+- Niveau de rapprochement ajustable par le seuil.
 - Termes caractéristiques disponibles pour examiner les résultats.
 
 Limites :
 - Seuil à régler sur un échantillon représentatif.
-- Coût de calcul et mémoire à mesurer selon le volume quotidien.
-- Risque de séparer des formulations différentes du même sujet
-  ou de réunir des sujets partageant un vocabulaire similaire.
-- Traitement des textes vides et des groupes isolés à définir.
+- Temps et mémoire à mesurer selon le volume.
+- Erreurs possibles de fusion ou de séparation des sujets.
+- Textes vides et publications isolées à traiter explicitement.
 
 Décision :
-Approche retenue et validée par Yannick pour la première architecture.
+Approche retenue et validée par Yannick.
+Aucune performance n'est encore revendiquée.
 
-Le seuil de distance, le prétraitement et le traitement des publications
-isolées seront définis à partir des évaluations prévues.
-Aucun résultat de performance n'est encore revendiqué.
-
-### Option D — Représentations sémantiques préentraînées et regroupement
+### Option D — Représentations sémantiques préentraînées
 
 Principe :
-Utiliser un modèle de représentation de phrases pour produire
-des vecteurs, puis appliquer un algorithme de regroupement.
+Produire des vecteurs de phrases avec un modèle préentraîné,
+puis appliquer un regroupement.
 
 Avantage recherché :
-Mieux rapprocher des formulations différentes d'un même sujet.
+Rapprocher des formulations différentes du même sujet.
 
-Limites à étudier :
-- Modèle francophone ou multilingue à sélectionner et licence à vérifier.
-- Ressources CPU, mémoire, taille du modèle et durée à mesurer.
-- Gain de pertinence à démontrer par rapport à TF-IDF.
-- Modèle et paramètres à versionner.
-- Aucune génération de résumé ne sera ajoutée.
+Limites :
+- Modèle et licence à vérifier.
+- Ressources et durée à mesurer.
+- Gain par rapport à TF-IDF à démontrer.
+- Versions et paramètres à tracer.
 
 Décision :
-Ne pas retenir pour la première architecture.
-Réexaminer uniquement si les résultats justifient une amélioration.
+Non retenues pour la première architecture.
+À réexaminer si l'évaluation justifie une amélioration.
+Aucune génération de résumé ne sera ajoutée.
 
-### Fonctionnement retenu — paramètres à évaluer
+### Fonctionnement retenu
 
 1. Sélectionner les publications propres admissibles pour l'édition.
-2. Construire le texte de travail : titre et extrait.
+2. Construire le texte de travail avec le titre et l'extrait.
 3. Appliquer un prétraitement documenté et adapté au français.
 4. Produire les vecteurs TF-IDF.
-5. Traiter les textes sans représentation exploitable selon une règle
-   explicite avant le calcul des distances.
+5. Traiter les textes sans représentation exploitable.
 6. Regrouper par distance cosinus avec un seuil évalué.
 7. Extraire des termes caractéristiques pour proposer des libellés.
-8. Associer les sources et les liens à chaque groupe.
+8. Associer sources et liens aux groupes.
 
-Les libellés issus des termes caractéristiques ne seront pas présentés
-comme des résumés générés des articles.
+Les libellés ne seront pas présentés comme des résumés générés.
 
 ### Évaluation prévue
 
-- Préparer un petit échantillon de publications annoté par l'équipe.
-- Vérifier si les publications réunies traitent réellement du même sujet.
-- Examiner aussi les publications proches séparées à tort.
+- Constituer un échantillon annoté par l'équipe.
+- Examiner les publications regroupées à tort et séparées à tort.
 - Comparer plusieurs seuils et l'alternative K-means.
-- Mesurer le temps d'exécution et l'usage mémoire.
+- Mesurer temps et mémoire.
 - Définir le traitement des groupes d'une seule publication.
-- Tracer les données d'entrée, les paramètres, les versions,
-  les métriques et les résultats de chaque expérience.
-
-Aucun résultat de performance n'est encore revendiqué.
+- Tracer données d'entrée, paramètres, versions et résultats.
 
 ### Sources
 
-- scikit-learn — Regroupement de documents avec K-means :
+- Regroupement de documents :
   https://scikit-learn.org/stable/auto_examples/text/plot_document_clustering.html
-- scikit-learn — AgglomerativeClustering :
+- Classification hiérarchique :
   https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AgglomerativeClustering.html
 
-La documentation d'un éventuel modèle sémantique sera ajoutée
-si cette option est étudiée.
+La référence d'un modèle sémantique sera ajoutée si cette piste
+est effectivement étudiée.
 
 ## 5. Surveiller le pipeline
 
 Responsable : Yannick.
 Relecture : Walter.
-Statut : architecture de supervision validée par Yannick.
-La configuration, les seuils et le canal de notification restent
-à définir ; les composants ne sont pas encore déployés ni testés.
+Statut : architecture validée par Yannick ;
+configuration, seuils et canal de notification à définir.
 
 ### Besoin
 
-Savoir si le pipeline a fonctionné sans intervention humaine,
-identifier les étapes en échec et vérifier que l'édition attendue
-est disponible à 7 h avec des articles de moins de 24 h.
+Vérifier le fonctionnement sans intervention humaine, diagnostiquer
+les échecs et contrôler l'édition attendue à 7 h.
 
 Distinguer :
-- les métriques : valeurs numériques suivies dans le temps ;
-- les journaux : événements détaillés pour le diagnostic ;
-- les alertes : notifications nécessitant une intervention ;
-- le journal de bord : suivi humain des incidents et correctifs.
+- métriques : valeurs numériques suivies dans le temps ;
+- journaux : événements techniques pour le diagnostic ;
+- alertes : notifications appelant une intervention ;
+- journal de bord : suivi humain des incidents et correctifs.
 
 ### Option A — Journaux systemd et script de contrôle
 
-Principe :
-Consulter les journaux du service avec journalctl et prévoir
-un contrôle spécifique du résultat de l'exécution.
-
 Avantages :
-- Réutilise l'environnement systemd déjà retenu.
-- Permet de consulter les erreurs du service.
+- Réutilisation de systemd.
+- Consultation des erreurs du service.
 - Peu de composants supplémentaires.
 
 Limites :
-- Historique de métriques et tableaux de bord à construire séparément.
-- Un contrôle exécuté seulement par le pipeline ne détecte pas
-  nécessairement que le pipeline n'a pas démarré.
-- Notifications et vérification de l'édition à organiser.
+- Historique de métriques et tableaux de bord à construire.
+- Contrôle lancé uniquement par le pipeline insuffisant pour détecter
+  son absence de démarrage.
+- Notifications à organiser.
 
-Avis proposé :
-Conserver les journaux systemd pour le diagnostic, mais ne pas
-les utiliser comme seul dispositif de supervision.
+Décision :
+Conserver les journaux pour le diagnostic, pas comme unique supervision.
 
 ### Option B — Prometheus, Grafana et Pushgateway
 
 Principe :
-Le pipeline transmet ses métriques à Pushgateway.
-Prometheus les collecte et conserve leur historique.
-Grafana les affiche et évalue les règles d'alerte.
+Le batch transmet ses métriques à Pushgateway.
+Prometheus les collecte et Grafana les affiche et évalue les alertes.
 
 Avantages :
-- Historique des métriques et tableaux de bord.
+- Historique et tableaux de bord.
 - Alertes fondées sur les résultats et leur fraîcheur.
-- Adaptation aux traitements batch qui ne restent pas actifs
-  assez longtemps pour être interrogés directement.
-- Possibilité de versionner les configurations.
+- Adaptation aux traitements courts.
+- Configurations versionnables.
 
 Limites :
-- Plusieurs composants supplémentaires à déployer et maintenir.
-- Stockage persistant et rétention à configurer.
-- Les métriques conservées par Pushgateway peuvent devenir anciennes.
-- Une panne de toute l'infrastructure peut rendre la supervision
-  locale indisponible.
+- Composants supplémentaires à exploiter.
+- Persistance et rétention à configurer.
+- Métriques Pushgateway pouvant devenir anciennes.
+- Supervision locale indisponible si toute la machine tombe en panne.
 
 Décision :
-Solution retenue et validée par Yannick pour les métriques,
-les tableaux de bord et les alertes, avec des journaux structurés
-en complément.
+Solution retenue et validée par Yannick, avec journaux structurés.
 
-### Option C — Prometheus, Grafana et Node Exporter textfile collector
+### Option C — Prometheus, Grafana et textfile collector
 
 Principe :
-Le pipeline écrit ses métriques dans un fichier local exposé
-par le textfile collector de Node Exporter.
+Écrire les métriques dans un fichier exposé par le textfile collector
+de Node Exporter.
 
 Avantages :
 - Pas de Pushgateway nécessaire.
-- Possibilité de regrouper supervision de la machine
-  et indicateurs de traitements locaux.
+- Possibilité de suivre l'hôte et ses traitements locaux.
 
 Limites :
-- Métriques liées au système de fichiers de la machine.
-- Fichier à publier de manière cohérente et à surveiller.
-- Dates de mise à jour à contrôler pour éviter les faux succès.
-- Prometheus recommande cette approche pour les traitements
-  liés à une machine ; notre édition est un résultat de service.
+- Dépendance aux fichiers de la machine.
+- Publication cohérente et fraîcheur des fichiers à contrôler.
+- Approche orientée traitements liés à l'hôte, alors que notre édition
+  constitue un résultat de service.
 
-Avis proposé :
-Alternative pertinente si l'équipe choisit une supervision
-principalement centrée sur l'hôte ; non privilégiée pour l'instant.
+Décision :
+Non privilégiée pour le suivi du batch.
+Une utilisation ultérieure pour les métriques de l'hôte reste possible.
 
-### Option D — Service de supervision hébergé
-
-Principe :
-Utiliser un service externe de suivi, de tableaux de bord
-ou de réception de signaux d'exécution.
+### Option D — Supervision hébergée
 
 Avantages recherchés :
-- Réduction de certains composants à héberger.
-- Possibilité de détecter une indisponibilité de la machine
-  depuis un système externe.
+- Moins de composants locaux à exploiter.
+- Possibilité de contrôle depuis l'extérieur du serveur.
 
-Limites à vérifier :
-- Offre gratuite, quotas et durée de rétention.
-- Gestion des comptes, secrets et données transmises.
-- Dépendance à un service tiers.
-- Capacité à suivre les contrôles métier propres à l'édition.
+Limites :
+- Fournisseur, gratuité, quotas et rétention non vérifiés.
+- Secrets, comptes et données transmises à gérer.
+- Dépendance supplémentaire.
+- Contrôles métier à intégrer.
 
-Avis proposé :
-Ne pas retenir comme socle principal sans fournisseur identifié
-et conditions vérifiées. Réexaminer pour un contrôle externe
-si l'infrastructure le permet.
+Décision :
+Non retenue comme socle principal.
+À réexaminer pour un contrôle externe.
 
-### Décision retenue
+### Architecture retenue
 
-Architecture de supervision validée par Yannick :
-- Prometheus pour collecter et conserver les métriques ;
-- Pushgateway pour exposer les résultats des traitements batch ;
-- Grafana pour les tableaux de bord et les alertes ;
-- des journaux applicatifs structurés pour le diagnostic ;
-- journalctl pour consulter les journaux du service systemd.
+- Prometheus pour les métriques.
+- Pushgateway pour les résultats du batch.
+- Grafana pour les tableaux de bord et les alertes.
+- Journaux applicatifs structurés pour le diagnostic.
+- journalctl pour les journaux du service systemd.
 
-Grafana Alerting est retenu comme unique moteur d'alerte initial.
-Aucun second moteur ne sera ajouté sans besoin identifié.
-
-La supervision devra contrôler l'édition effectivement publiée,
-sa fraîcheur et les dates des dernières exécutions.
-Un ancien résultat de succès ne devra pas masquer l'absence
-d'une nouvelle édition.
-
-Le canal de notification, les seuils, la rétention et les configurations
-seront définis et testés lors de la réalisation.
+Grafana Alerting constitue l'unique moteur d'alerte initial.
 
 ### Indicateurs envisagés
 
 Exécution :
-- Date de la dernière tentative.
-- Date de la dernière exécution réussie.
-- Résultat et durée des différentes étapes.
-- Nombre d'échecs de collecte par source.
+- Dates de dernière tentative et dernière réussite.
+- Résultat et durée des étapes.
+- Échecs par source.
 
 Données :
-- Nombre d'items reçus par source lors de la dernière collecte.
-- Nombre d'articles conservés, rejetés et dédupliqués.
-- Nombre de sources représentées dans l'édition.
-- Nombre d'articles sans date ou avec date non exploitable.
+- Items reçus par source.
+- Articles conservés, rejetés et dédupliqués.
+- Sources représentées dans l'édition.
+- Dates absentes ou non exploitables.
 
 Publication :
-- Date de l'édition effectivement publiée.
-- Date et heure de publication.
-- Présence de l'édition attendue et possibilité de la lire.
+- Date de l'édition et heure de publication.
+- Présence et lisibilité de l'édition attendue.
 - Âge maximal des articles au moment de la publication.
-
-Les contrôles de publication ne doivent pas reposer uniquement
-sur le succès de la collecte ou du regroupement.
 
 ### Alertes envisagées
 
-- Échec d'une étape après les tentatives prévues.
-- Absence de nouvelle exécution dans la fenêtre attendue.
-- Édition du jour absente ou indisponible à l'échéance.
-- Présence d'un article de 24 h ou plus dans l'édition publiée.
-- Source en échec ou sans résultat, avec seuil à évaluer.
-- Couverture insuffisante des sources selon une règle à définir.
+- Échec après les tentatives prévues.
+- Absence d'exécution dans la fenêtre attendue.
+- Édition absente ou indisponible à l'échéance.
+- Article de 24 h ou plus au moment de la publication.
+- Source en échec ou sans résultat, selon des seuils à évaluer.
+- Couverture insuffisante selon une règle à définir.
 
-Le fuseau de référence et la fréquence d'évaluation des alertes
-seront fixés explicitement.
+Le fuseau de référence et la fréquence d'évaluation seront explicites.
 
-### Précautions de réalisation
+### Précautions
 
-- Suivre les dates de dernière réussite et de publication :
-  une ancienne valeur de succès ne prouve pas l'exécution du jour.
-- Définir le traitement des métriques absentes et des erreurs
-  de la source de données.
-- Ne pas utiliser un identifiant unique d'exécution ou une URL
-  d'article comme label Prometheus.
+- Contrôler les dates : un ancien succès ne prouve pas l'exécution du jour.
+- Définir le comportement en cas de métriques absentes.
+- Ne pas utiliser les identifiants d'exécution ou URLs d'articles
+  comme labels Prometheus.
 - Conserver les identifiants d'exécution dans les journaux.
-- Éviter les groupes Pushgateway créés pour chaque exécution.
-- Prévoir la suppression des métriques devenues obsolètes.
-- Ne pas effacer systématiquement les résultats dès la fin du batch :
-  Prometheus doit pouvoir les collecter.
-- Ne pas inclure d'extraits d'articles, de secrets ou de profils
-  dans les journaux techniques.
-- Définir les rétentions et la persistance des métriques et journaux.
-- Configurer le canal de notification et tester sa réception.
-- Protéger l'accès aux composants de supervision.
+- Éviter un groupe Pushgateway par exécution.
+- Gérer les métriques obsolètes.
+- Ne pas effacer les résultats avant leur collecte par Prometheus.
+- Exclure secrets, extraits et profils des journaux techniques.
+- Définir persistance, rétention et permissions.
+- Configurer et tester le canal de notification.
 
-Une supervision hébergée sur la même machine ne peut pas garantir
-la notification d'une panne complète de cette machine.
-Ce risque résiduel sera documenté.
+Une supervision sur la même machine ne garantit pas la notification
+d'une panne complète de celle-ci. Ce risque reste documenté.
 
 ### Tests prévus
 
-- Simuler une source indisponible.
-- Simuler l'échec d'une étape.
-- Ne pas lancer le pipeline et vérifier la détection de l'absence.
-- Laisser une ancienne réussite et vérifier qu'elle ne masque pas
-  l'absence d'édition du jour.
-- Publier une édition de test et vérifier le tableau de bord.
-- Vérifier la réception d'une notification.
-- Tester le comportement en cas de métriques absentes.
+- Source indisponible et étape en échec.
+- Absence totale de lancement.
+- Ancienne réussite ne masquant pas une édition manquante.
+- Publication de test visible dans le tableau de bord.
+- Réception d'une notification.
+- Métriques absentes.
 
-Aucun composant n'est déclaré installé ni testé à ce stade.
+Aucun composant n'est déclaré déployé ni testé.
 
 ### Sources
 
-- Prometheus — Quand utiliser Pushgateway :
+- Pushgateway :
   https://prometheus.io/docs/practices/pushing/
-- Prometheus — Métriques des traitements courts :
+- Métriques des traitements courts :
   https://prometheus.io/docs/instrumenting/pushing/
-- Grafana — Alertes avec une source Prometheus :
+- Grafana Alerting avec Prometheus :
   https://grafana.com/docs/grafana/latest/datasources/prometheus/alerting/
-- systemd — journalctl :
+- journalctl :
   https://www.freedesktop.org/software/systemd/man/journalctl.html
 
 ## 6. Décrire l'infrastructure en code
 
 Responsable : Darrel.
 Relecture : Yannick.
-Statut : à compléter et à valider.
+Statut : Ansible, Docker et Docker Compose validés par Darrel.
+Compatibilité, ressources et droits du serveur fourni à confirmer.
 
-À compléter :
-- Comparer les solutions adaptées à l'hébergement envisagé.
-- Justifier la solution retenue et les alternatives écartées.
-- Préciser la gestion de la configuration, des secrets et de la persistance.
-- Articuler le déploiement avec les unités systemd.
-- Ajouter les références consultées.
+### Besoin
+
+Versionner la préparation de l'environnement, le déploiement,
+les configurations, la persistance et la planification.
+
+Permettre de reconstruire l'environnement sans dépendre
+d'une succession d'opérations manuelles non documentées.
+
+La cible envisagée est un serveur Linux existant fourni ultérieurement.
+
+### Option A — Scripts shell et Docker Compose
+
+Principe :
+Préparer l'hôte par scripts et décrire les conteneurs avec Compose.
+
+Avantages :
+- Approche directe.
+- Fichiers versionnés.
+- Peu d'outils supplémentaires.
+
+Limites :
+- Gestion de l'état existant à développer.
+- Réexécution et traitement des erreurs à sécuriser.
+- Compose ne configure pas seul tout l'hôte.
+
+Décision :
+Ne pas retenir les scripts comme mécanisme principal de configuration.
+Conserver des scripts courts pour des opérations ciblées.
+
+### Option B — Ansible et Docker Compose
+
+Principe :
+Configurer l'hôte et déployer les fichiers avec Ansible ;
+décrire les services, réseaux et volumes avec Compose.
+
+Avantages :
+- Séparation entre configuration de l'hôte et services applicatifs.
+- Modules vérifiant l'état attendu.
+- Déploiement des unités systemd et configurations depuis le dépôt.
+- Gestion possible de Compose via community.docker.
+- Réexécution structurée à vérifier.
+
+Limites :
+- Inventaire, accès et privilèges à configurer.
+- Versions et dépendances à maîtriser.
+- Idempotence non automatique pour toutes les tâches.
+- Ne crée pas à elle seule le serveur.
+- Ressources disponibles encore inconnues.
+
+Décision :
+Solution retenue et validée par Darrel.
+Ansible configure l'hôte et déploie les fichiers.
+Docker et Compose exécutent les services conteneurisés
+avec stockage persistant.
+
+### Option C — Terraform et outil de configuration
+
+Principe :
+Gérer les ressources via un fournisseur Terraform identifié,
+puis configurer le système avec un outil adapté.
+
+Avantage recherché :
+Versionner aussi la création des machines et réseaux si nécessaire.
+
+Limites :
+- Fournisseur et droits de création non communiqués.
+- Aucun besoin confirmé de créer des machines ou réseaux.
+- État d'infrastructure et secrets à gérer.
+- Ne remplace pas toute la configuration interne de l'hôte.
+
+Décision :
+Non retenu à ce stade.
+Réexaminer si la plateforme fournie exige la création de ressources.
+
+### Option D — Manifests Kubernetes
+
+Principe :
+Décrire les applications dans les ressources d'un cluster.
+
+Avantage recherché :
+Déployer dans un cluster lorsqu'il constitue la cible imposée.
+
+Limites :
+- Aucun cluster ni besoin multi-nœud confirmé.
+- Complexité supplémentaire à justifier.
+- Ne remplace pas seul la préparation de l'infrastructure.
+
+Décision :
+Non retenu pour la première architecture.
+Réexaminer uniquement si la plateforme fournie l'impose.
+
+### Architecture retenue
+
+- Ansible pour configurer l'hôte Linux.
+- Docker pour conteneuriser les composants.
+- Docker Compose pour les services, réseaux et volumes.
+- systemd pour le déclenchement quotidien.
+
+Ansible déploiera les fichiers Compose, les configurations
+de supervision et les unités systemd.
+
+Le serveur devra permettre ces opérations.
+Son système, ses ressources, ses accès et les privilèges disponibles
+restent à confirmer.
+
+### Organisation envisagée
+
+- Conteneur de traitement exécuté à la demande.
+- Services de supervision maintenus disponibles.
+- JSONL, SQLite et données de supervision en stockage persistant.
+- Écritures SQLite coordonnées.
+- Chemins et paramètres adaptés à l'environnement.
+- Secrets et données collectées exclus du dépôt.
+
+SQLite reste un fichier persistant, pas un service de base distinct.
+
+Le déclenchement quotidien relève de systemd et non d'une politique
+de redémarrage permanent du conteneur de traitement.
+
+La collecte des journaux sera explicitée :
+journaux des services Compose et sortie du traitement consultable
+depuis le service systemd.
+
+### Développement sous WSL 2
+
+Le projet utilisé pour l'exécution sera placé dans le système
+de fichiers Linux de WSL 2.
+
+Une procédure commune d'accès à Docker sera choisie et documentée.
+Les installations concurrentes non maîtrisées seront évitées.
+
+WSL permettra les tests locaux.
+Les permissions, réseaux, démarrages et ressources seront également
+vérifiés sur le serveur de production.
+
+### Secrets et accès
+
+- Ne pas commiter mots de passe, clés privées ou jetons.
+- Versionner des exemples sans valeurs sensibles.
+- Définir les permissions des fichiers et répertoires.
+- Protéger Grafana, Prometheus et Pushgateway.
+- Définir la fourniture des secrets avant déploiement.
+
+### Vérifications prévues
+
+- Validation de syntaxe.
+- Déploiement sur un environnement de test.
+- Réexécution et examen des changements.
+- Persistance après recréation des conteneurs.
+- Installation et activation du timer.
+- Sauvegarde et restauration.
+- Mise à jour et retour à une version précédente.
+
+Aucun déploiement, test d'idempotence ou test de restauration
+n'est déclaré réalisé au TD 1.
+
+### Sources
+
+- Ansible — Playbooks :
+  https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html
+- Ansible — Docker Compose :
+  https://docs.ansible.com/ansible/latest/collections/community/docker/docker_compose_v2_module.html
+- Docker Compose :
+  https://docs.docker.com/compose/
+- Terraform :
+  https://developer.hashicorp.com/terraform/intro
+- Kubernetes :
+  https://kubernetes.io/docs/concepts/overview/
+
+Les modalités propres à l'hébergement seront ajoutées
+lorsqu'elles seront communiquées.
+
+## 7. Points transversaux restant à décider
+
+- Langage, bibliothèques et outillage de test.
+- Outil et stratégie de CI/CD.
+- Format et mode de publication de l'édition.
+- Fuseau de référence.
+- Conditions de réutilisation des sources encore ouvertes.
+
+Les paramètres détaillés d'exécution, de rétention, de sauvegarde,
+d'alerte et d'évaluation seront précisés lors de la réalisation.
