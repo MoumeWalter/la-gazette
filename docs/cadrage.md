@@ -55,9 +55,21 @@ A completer apres la veille technique.
 
 A completer.
 
-## 6. Risques et mesures envisagees
+## 6. Risques et mesures envisagées
 
-A completer.
+| Risque | Mesure envisagée | Référent |
+|---|---|---|
+| Conditions des éditeurs incompatibles avec notre usage collectif | Clarifier les autorisations avant exploitation ; remplacer une source si nécessaire ; documenter la décision dans sources.csv. | Walter |
+| Source indisponible ou champs manquants | Prévoir des délais d'attente, des tentatives limitées et un contrôle des champs ; signaler les sources en échec. | Walter |
+| Articles trop anciens, dates incorrectes ou doublons | Contrôler chaque date avec son fuseau horaire ; exclure de l'édition les articles de plus de 24 h ou non datables ; définir une règle de déduplication. | Walter |
+| Collecte accidentelle de contenus hors périmètre | Limiter les champs conservés aux titres, extraits, liens, dates et métadonnées techniques nécessaires ; exclure texte intégral, images, commentaires et profils. | Walter |
+| Édition absente à 7 h ou pipeline interrompu | Prévoir une marge avant publication, une procédure de relance et une alerte ; mesurer le respect de l'horaire. | Darrel / Yannick |
+| Perte des données ou environnement non reproductible | Prévoir un stockage persistant, des sauvegardes avec test de restauration et une infrastructure décrite en code ; ne pas versionner les données collectées ni les secrets dans Git. | Darrel |
+| Regroupements thématiques peu pertinents ou difficiles à reproduire | Évaluer un échantillon de résultats et tracer les paramètres, les versions et les exécutions du modèle. | Yannick |
+| Dépendance à un seul membre ou contributions incohérentes | Documenter chaque partie, faire relire les modifications par un autre membre et valider collectivement les décisions techniques. | Toute l'équipe |
+
+Ces mesures sont prévues au cadrage ; elles ne sont pas encore
+implémentées ni testées. Elles seront précisées lors des TD suivants.
 
 ## 7. Équipe et répartition des rôles
 
