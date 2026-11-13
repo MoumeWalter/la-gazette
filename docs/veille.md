@@ -1,5 +1,3 @@
-# Veille technique — TD 1
-
 ## Synthèse
 
 Cette veille compare les solutions envisagées pour La gazette,
@@ -128,6 +126,22 @@ La vérification technique ne vaut pas autorisation de réutilisation.
 Les restrictions sont documentées dans sources.csv.
 Toute source incompatible devra être remplacée ou faire l'objet
 d'une autorisation adaptée avant exploitation.
+
+### Observation du flux de Libération
+
+Le flux RSS de Libération fournit les champs nécessaires à la collecte :
+titre, lien, identifiant pérenne, extrait, date de publication et auteurs.
+La date de publication est exprimée avec un décalage horaire explicite.
+
+Le pipeline conservera ces champs autorisés en JSONL, avec l'URL du flux
+et la date de collecte. La déduplication utilisera en priorité l'identifiant
+pérenne, puis l'URL normalisée. La fraîcheur sera contrôlée à partir
+de la date de chaque article, convertie en UTC, et non à partir de la seule
+date de mise à jour du flux.
+
+Cette observation porte sur un flux réel consulté le 13 novembre 2026.
+Elle ne remplace pas la vérification des conditions d'utilisation
+et ne garantit pas la stabilité future du flux.
 
 ### Sources
 
@@ -1147,7 +1161,7 @@ testé à ce stade.
 Ces points seront suivis sans présenter les mesures prévues
 comme déjà mises en œuvre ou testées.
 
-## 9. Publier et archiver l'édition
+## 10. Publier et archiver l'édition
 
 Responsable : Walter.
 Relecture : Darrel et Yannick.
