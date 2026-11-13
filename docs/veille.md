@@ -16,6 +16,8 @@ Ils ne signifient pas que les composants sont déjà installés ou testés.
 | Thèmes | TF-IDF et classification hiérarchique à distance cosinus | Yannick |
 | Supervision | Prometheus, Pushgateway, Grafana et journaux structurés | Yannick |
 | Infrastructure | Ansible, Docker et Docker Compose | Darrel |
+| Langage | Python | Walter / équipe |
+| CI/CD | GitHub Actions et déploiement contrôlé avec Ansible | Darrel |
 
 Réserves transversales :
 - Les droits de réutilisation des sources restent à clarifier.
@@ -207,8 +209,9 @@ Limites :
 - Persistance et accès à la production à organiser.
 
 Décision :
-Non retenu comme seul ordonnanceur pour l'échéance de 7 h.
-Son utilisation éventuelle pour la CI reste à évaluer séparément.
+Non retenu comme ordonnanceur de l'édition de 7 h.
+GitHub Actions est en revanche retenu pour la CI et la préparation
+des versions, comme décrit en section 8.
 
 ### Choix retenu et conditions
 
@@ -922,7 +925,10 @@ de toutes les bibliothèques associées.
 
 Responsable : Darrel.
 Relecture : Walter et Yannick.
-Statut : proposition à faire valider par Darrel et l'équipe.
+Statut : stratégie validée par Darrel.
+GitHub Actions est retenu pour la CI et la préparation des versions.
+Le déploiement avec Ansible sera déclenché explicitement après validation.
+Les workflows et la procédure de déploiement restent à réaliser et à tester.
 
 ### Besoin
 
@@ -954,8 +960,9 @@ Limites :
 - Fonctionnalités de protection des environnements à vérifier
   selon l'offre et la visibilité du dépôt.
 
-Avis proposé :
-Solution recommandée pour la CI et la préparation des versions.
+Décision :
+Solution retenue et validée par Darrel pour les contrôles automatiques,
+la construction des images et la préparation des versions.
 
 ### Option B — GitLab CI/CD
 
@@ -972,8 +979,9 @@ Limites dans notre projet :
 - Migration ou synchronisation supplémentaire à organiser.
 - Quotas et runners à vérifier.
 
-Avis proposé :
-Non privilégié pour éviter d'ajouter une seconde plateforme.
+Décision :
+Non retenu pour éviter d'ajouter une seconde plateforme
+ou de migrer le dépôt existant.
 
 ### Option C — Jenkins
 
@@ -989,7 +997,7 @@ Limites dans notre projet :
 - Configuration des agents et accès à organiser.
 - Charge d'exploitation non justifiée pour la première architecture.
 
-Avis proposé :
+Décision :
 Non retenu au démarrage.
 
 ### Option D — Contrôles manuels uniquement
@@ -1006,25 +1014,34 @@ Limites :
 - Résultats dépendants du poste.
 - Risque d'oubli et preuves de contrôle dispersées.
 
-Avis proposé :
+Décision :
 Conserver les contrôles locaux en complément,
 mais pas comme seule validation avant livraison.
 
-### Stratégie proposée
+### Stratégie retenue
 
-Retenir GitHub Actions pour :
+Choix validé par Darrel : utiliser GitHub Actions pour :
 - installer l'environnement de test ;
 - exécuter les contrôles de qualité ;
 - exécuter les tests automatisés ;
 - valider les configurations concernées ;
 - construire l'image Docker.
 
+Les contrôles seront déclenchés sur les push et pull requests
+selon les règles définies dans les workflows.
+
 Le déploiement de production sera déclenché explicitement
 après réussite des contrôles et relecture.
-
 Ansible appliquera la configuration et la version choisie.
+
 Aucun déploiement automatique sur chaque push n'est retenu
-dans cette proposition initiale.
+pour la première architecture.
+
+Systemd reste responsable du déclenchement quotidien du pipeline.
+GitHub Actions n'est pas utilisé comme ordonnanceur de l'édition de 7 h.
+
+Le registre d'images, les quotas, les accès au serveur et les modalités
+exactes du déclenchement de déploiement restent à préciser.
 
 ### Contrôles envisagés
 
@@ -1038,6 +1055,8 @@ dans cette proposition initiale.
 - Construction de l'image Docker.
 
 Les bibliothèques, commandes et versions seront définies au TD 2.
+Les tests métier seront ajoutés au fur et à mesure du développement
+des composants concernés.
 
 Les tests ne dépendront pas systématiquement des flux de presse réels.
 Des exemples synthétiques ou des fixtures dont l'utilisation est
@@ -1090,3 +1109,37 @@ testé à ce stade.
   https://docs.github.com/actions/learn-github-actions/migrating-from-gitlab-cicd-to-github-actions
 - Comparaison avec Jenkins :
   https://docs.github.com/actions/learn-github-actions/migrating-from-jenkins-to-github-actions
+
+## 9. Points transversaux restant à préciser
+
+### Décisions de cadrage encore ouvertes
+
+- Format de l'édition et mode de publication.
+- Fuseau de référence de l'édition.
+- Conditions de réutilisation des sources encore non clarifiées.
+
+### Paramètres à préciser lors de la réalisation
+
+- Version de Python, bibliothèques et outillage de test.
+- Organisation des modules et commande d'exécution.
+- Workflows de CI et règles de déclenchement.
+- Registre ou mécanisme de transfert des images.
+- Quotas et rétention des artefacts.
+- Accès au serveur et déclenchement du déploiement.
+- Heure de démarrage du traitement et délais maximaux.
+- Seuil de regroupement et règles pour les publications isolées.
+- Seuils d'alerte et canal de notification.
+- Rétention des données, journaux et métriques.
+- Procédures de sauvegarde, restauration et retour arrière.
+
+### Vérifications dépendant de l'infrastructure fournie
+
+- Distribution Linux et présence de systemd.
+- Possibilité d'installer ou d'utiliser Docker et Docker Compose.
+- Accès nécessaires au déploiement Ansible.
+- Ressources CPU, mémoire et stockage.
+- Réseau, accès à l'édition et protection des services.
+- Disponibilité de la machine et conditions d'exploitation.
+
+Ces points seront suivis sans présenter les mesures prévues
+comme déjà mises en œuvre ou testées.
