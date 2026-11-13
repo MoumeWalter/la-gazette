@@ -1,6 +1,11 @@
 # Note de cadrage — La gazette
 
-Statut : a completer et a valider en equipe.
+Statut : cadrage en cours de finalisation.
+Choix validés : collecte RSS, timer systemd, stockage JSONL + SQLite,
+regroupement TF-IDF avec classification hiérarchique et supervision
+Prometheus + Pushgateway + Grafana, complétée par des journaux structurés.
+Infrastructure en code et autres choix ouverts à compléter.
+Les droits de réutilisation des sources restent à clarifier.
 
 ## 1. Besoin
 
@@ -19,17 +24,19 @@ identifier les éventuels incidents.
 ## 2. Périmètre
 
 ### Inclus
+
 - Collecter les titres, extraits, liens et dates accessibles aux machines
   dans le respect des conditions des éditeurs.
 - Couvrir au minimum quatre sources de presse quotidienne régionale
   et quatre sources de presse quotidienne nationale.
-- Conserver les données brutes collectées et leur provenance.
+- Conserver les métadonnées brutes autorisées et leur provenance.
 - Nettoyer les données, contrôler leur qualité et éliminer les doublons.
 - Regrouper les publications par thèmes.
 - Générer, publier et archiver une édition quotidienne.
 - Superviser le pipeline avec des métriques, des journaux et des alertes.
 
 ### Exclus
+
 - Collecter ou stocker le texte intégral des articles.
 - Collecter les images, commentaires, profils ou données d'abonnés.
 - Résumer les articles avec un LLM.
@@ -47,7 +54,45 @@ identifier les éventuels incidents.
 - Privilégier la robustesse et l'observabilité plutôt que l'ajout
   de fonctionnalités.
 
+Le fuseau de référence de l'édition reste à définir explicitement.
+
 ## 4. Stack retenue et justification
+
+### Collecte — flux RSS des éditeurs
+
+Retenir les flux RSS pour récupérer les titres, extraits, liens et dates
+sans extraire les pages des articles.
+
+Les huit sources ont été inspectées manuellement ; les observations
+et restrictions sont consignées dans sources.csv.
+La validation technique ne vaut pas autorisation de réutilisation.
+
+Les conditions encore ouvertes devront être clarifiées avant exploitation.
+Une source incompatible devra être remplacée ou faire l'objet
+d'une autorisation adaptée.
+
+### Supervision — Prometheus, Pushgateway et Grafana
+
+Choix validé par Yannick : utiliser Prometheus pour les métriques,
+Pushgateway pour les résultats des traitements batch et Grafana
+pour les tableaux de bord et les alertes.
+
+Les journaux applicatifs structurés complètent les métriques
+pour le diagnostic ; les journaux du service systemd seront
+consultables avec journalctl.
+
+La supervision contrôlera les résultats des étapes, les dates
+des dernières exécutions, la présence de l'édition attendue,
+son heure de publication et la fraîcheur des articles.
+Un ancien succès ne devra pas masquer une absence d'exécution.
+
+Grafana Alerting est retenu comme unique moteur d'alerte initial.
+Le canal de notification, les seuils, les rétentions et le traitement
+des métriques absentes restent à définir et à tester.
+
+Le risque d'indisponibilité simultanée du pipeline et de sa supervision
+sur une même machine est identifié. Aucun dispositif externe
+de surveillance n'est encore retenu.
 
 ### Ordonnancement — timer systemd
 
@@ -55,14 +100,14 @@ Choix validé par Darrel : retenir un timer systemd pour la production,
 sous réserve que l'infrastructure fournie soit un serveur Linux utilisant
 systemd et permette le déploiement des unités nécessaires.
 
-Ce choix convient à un pipeline quotidien exécuté sur un serveur unique :
+Ce choix convient à l'architecture envisagée sur un serveur unique :
 la planification est décrite dans une unité .timer et l'exécution dans
 une unité .service. Ces fichiers seront versionnés dans le dépôt.
 
-L'équipe utilise des PC Windows avec WSL 2 pour développer et tester
-les unités dans un environnement Linux compatible. WSL reste un
-environnement de développement et de test, pas une garantie de
-disponibilité pour l'édition quotidienne.
+L'équipe utilise des PC Windows et prévoit WSL 2 pour développer et tester
+les unités dans un environnement Linux compatible.
+WSL reste un environnement de développement et de test, pas une garantie
+de disponibilité pour l'édition quotidienne.
 
 Le traitement sera déclenché avant 7 h avec une marge fondée sur
 sa durée mesurée. Le fuseau de référence, la gestion des échecs,
@@ -101,16 +146,90 @@ Une procédure de sauvegarde et un test de restauration seront prévus.
 Ce choix est définitif pour la première architecture. Il devra être
 réexaminé si le projet exige ultérieurement plusieurs serveurs écrivains.
 
-## 5. Alternatives ecartees et justification
+### Regroupement par thèmes — TF-IDF et classification hiérarchique
 
+Choix validé par Yannick : représenter les titres et extraits autorisés
+avec TF-IDF, puis regrouper les publications par classification
+hiérarchique avec distance cosinus et liaison moyenne.
 
-- Tout stocker en fichiers JSONL : non retenu pour les données propres,
+Cette approche est retenue pour permettre un nombre de groupes variable
+selon les publications du jour, sans imposer un nombre fixe de thèmes.
+Les termes caractéristiques serviront à proposer des libellés,
+sans générer de résumés d'articles avec un LLM.
+
+Le seuil de distance, le prétraitement, les textes sans représentation
+exploitable et le traitement des publications isolées seront évalués
+sur un échantillon annoté par l'équipe.
+
+Les paramètres, les versions et les résultats des expériences seront
+tracés. Les performances restent à mesurer.
+
+### Choix restant à compléter
+
+- Langage, bibliothèques et outillage de test.
+- Conteneurisation et stratégie de CI/CD.
+- Infrastructure en code et modalités de déploiement.
+- Format et mode de publication de l'édition.
+
+Ces choix ne sont pas présentés comme validés à ce stade.
+
+## 5. Alternatives écartées et justification
+
+### Collecte
+
+- API officielles des éditeurs : accès adapté aux huit sources
+  et au budget nul non confirmé.
+- API d'agrégation : couverture, fraîcheur et conditions de production
+  non établies pour le projet.
+- Extraction des pages HTML : non retenue dans notre périmètre ;
+  la collecte privilégie les flux des éditeurs.
+
+### Ordonnancement
+
+- Cron : non retenu au profit de la gestion par unités systemd
+  et du rattrapage possible des échéances manquées.
+- Apache Airflow : complexité initiale non justifiée pour l'exécution
+  séquentielle envisagée sur un serveur unique.
+- GitHub Actions planifié : non retenu comme seul ordonnanceur
+  de production pour l'échéance de 7 h ; son usage pour la CI
+  reste à évaluer séparément.
+
+### Stockage
+
+- Tout stocker en JSONL : non retenu pour les données propres,
   afin de disposer de requêtes SQL et de contraintes d'unicité en base.
 - PostgreSQL : non retenu pour cette première architecture, qui prévoit
   un serveur unique et des écritures coordonnées ; l'équipe privilégie
   une exploitation initiale plus simple.
 - Parquet : non retenu comme stockage opérationnel principal ; aucun
   besoin d'export analytique en colonnes ne le justifie à ce stade.
+
+### Regroupement par thèmes
+
+- Règles et mots-clés : non retenus comme méthode principale en raison
+  de leur entretien manuel et de leur couverture limitée des nouveaux
+  sujets ; conservés comme référence simple.
+- TF-IDF + K-means : non retenu comme méthode principale, car il impose
+  de choisir un nombre de groupes ; conservé comme alternative
+  expérimentale.
+- Représentations sémantiques préentraînées : non retenues pour
+  la première architecture ; leur gain de pertinence, leur licence
+  et leurs besoins en ressources devront être évalués avant adoption.
+
+### Supervision
+
+- Journaux systemd et script de contrôle seuls : non retenus comme
+  dispositif complet ; les journaux restent utilisés pour le diagnostic.
+- Prometheus avec Node Exporter textfile collector : non privilégié
+  pour les résultats du service batch ; Pushgateway est retenu.
+- Service de supervision hébergé : non retenu comme socle principal,
+  faute de fournisseur et de conditions validés ; un contrôle externe
+  pourra être étudié pour couvrir l'indisponibilité totale du serveur.
+  
+Les autres alternatives seront ajoutées à l'issue des comparaisons
+sur l'infrastructure et les choix encore ouverts.
+
+
 
 ## 6. Risques et mesures envisagées
 
@@ -122,7 +241,7 @@ réexaminé si le projet exige ultérieurement plusieurs serveurs écrivains.
 | Collecte accidentelle de contenus hors périmètre | Limiter les champs conservés aux titres, extraits, liens, dates et métadonnées techniques nécessaires ; exclure texte intégral, images, commentaires et profils. | Walter |
 | Édition absente à 7 h ou pipeline interrompu | Prévoir une marge avant publication, une procédure de relance et une alerte ; mesurer le respect de l'horaire. | Darrel / Yannick |
 | Perte des données ou environnement non reproductible | Prévoir un stockage persistant, des sauvegardes avec test de restauration et une infrastructure décrite en code ; ne pas versionner les données collectées ni les secrets dans Git. | Darrel |
-| Regroupements thématiques peu pertinents ou difficiles à reproduire | Évaluer un échantillon de résultats et tracer les paramètres, les versions et les exécutions du modèle. | Yannick |
+| Regroupements peu pertinents ou difficiles à reproduire | Évaluer un échantillon annoté ; régler le seuil ; définir le traitement des textes vides et des publications isolées ; tracer les paramètres et versions. | Yannick |
 | Dépendance à un seul membre ou contributions incohérentes | Documenter chaque partie, faire relire les modifications par un autre membre et valider collectivement les décisions techniques. | Toute l'équipe |
 
 Ces mesures sont prévues au cadrage ; elles ne sont pas encore
@@ -141,6 +260,9 @@ implémentées ni testées. Elles seront précisées lors des TD suivants.
   regroupement par thèmes, évaluation et versionnement du modèle,
   métriques, journaux et alertes.
 
-Chaque membre documente et teste sa partie. Les choix techniques
-sont validés collectivement et les contributions sont relues par
-un autre membre.
+Chaque membre documente et teste sa partie.
+Les choix techniques sont validés collectivement et les contributions
+sont relues par un autre membre.
+
+Les comparaisons détaillées et leurs références figurent
+dans docs/veille.md. Le schéma est maintenu dans docs/architecture.md.
