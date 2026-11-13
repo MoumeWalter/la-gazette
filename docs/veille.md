@@ -29,8 +29,10 @@ Limites :
   être conservé, y compris dans le stockage brut ou les journaux.
 
 Décision :
-Solution retenue en priorité, sous réserve de la vérification
-des huit sources et de leurs conditions.
+Retenir les flux RSS des éditeurs comme mode de collecte.
+Les huit sources ont été inspectées manuellement et les résultats
+sont consignés dans sources.csv. Les droits de réutilisation restent
+à clarifier avant exploitation.
 
 ### Option B — API officielle d'un éditeur
 
@@ -84,16 +86,17 @@ Option écartée pour respecter les consignes du projet.
 
 ### Choix retenu et justification
 
-Nous privilégions les flux RSS/Atom directement publiés par les éditeurs.
-Ils constituent la première piste à vérifier pour récupérer les
-métadonnées nécessaires sans extraire les pages des articles.
+Les flux RSS des éditeurs sont retenus pour récupérer les métadonnées
+nécessaires sans extraire les pages des articles.
 
-Ce choix sera validé source par source dans sources.csv :
-adresse exacte, format, champs disponibles, conditions d'utilisation,
-fréquence observée et vérification manuelle d'un élément.
+Les huit flux sélectionnés ont été inspectés manuellement :
+titres, extraits, liens, dates et publications du jour ont été observés.
+Les adresses et les résultats sont documentés dans sources.csv.
 
-L'accessibilité technique d'un flux ne vaut pas autorisation
-de réutilisation de son contenu.
+Cette vérification technique ne vaut pas autorisation de réutilisation.
+Les restrictions connues et les conditions restant à clarifier sont
+consignées dans sources.csv. Une source incompatible avec l'usage prévu
+devra être remplacée ou faire l'objet d'une autorisation adaptée.
 
 ### Sources de la veille
 
@@ -106,15 +109,16 @@ de réutilisation de son contenu.
 - Exemple de conditions commerciales d'une API — NewsAPI :
   https://newsapi.org/pricing
 
-La disponibilité d'API officielles propres aux journaux et les conditions
-de chaque flux restent à vérifier ; aucune vérification n'est déclarée
-comme réalisée à ce stade.
+La disponibilité d'API officielles propres aux journaux n'a pas été
+confirmée. Les vérifications techniques des huit flux RSS sont terminées ;
+les vérifications des conditions de réutilisation restent à finaliser.
 
 ## 2. Exécuter le pipeline chaque matin
 
 Responsable : Darrel.
 Relecture : Yannick.
-Statut : proposition à valider collectivement.
+Statut : choix du timer systemd validé par Darrel pour la cible
+de production ; compatibilité de l'infrastructure fournie à confirmer.
 
 ### Besoin
 
@@ -151,8 +155,10 @@ Limites :
 - Un rattrapage après redémarrage ne rétablit pas le respect de 7 h
   si l'édition aurait dû être publiée pendant l'arrêt.
 
-Décision proposée :
-Choix provisoire pour une infrastructure de production Linux compatible.
+Décision :
+Timer systemd retenu pour la cible de production, sous réserve
+que le serveur fourni utilise systemd et permette le déploiement
+des unités nécessaires.
 
 ### Option C — Apache Airflow
 
@@ -185,10 +191,11 @@ Décision proposée :
 Non retenu comme seul ordonnanceur de production pour l'édition de 7 h.
 Son éventuelle utilisation pour la CI sera évaluée séparément.
 
-### Recommandation et conditions de validation
+### Choix retenu et conditions de mise en œuvre
 
-Privilégier un timer systemd si l'infrastructure fournie le permet.
-Confirmer ce choix collectivement après identification de l'hébergement.
+Retenir un timer systemd pour la production.
+Confirmer la compatibilité du serveur lorsque l'infrastructure
+sera communiquée.
 
 Prévoir :
 - une heure de déclenchement antérieure à 7 h, ajustée après mesure ;
@@ -270,8 +277,8 @@ Limites :
 - Sauvegarde cohérente et persistance du fichier à organiser.
 
 Décision :
-Retenir provisoirement pour les données propres, les thèmes
-et les éditions, avec écritures coordonnées sur une seule machine.
+Retenir SQLite pour les données propres, les thèmes et les éditions,
+avec écritures coordonnées sur une seule machine.
 
 ### Option C — PostgreSQL
 
@@ -313,7 +320,7 @@ Décision :
 Ne pas retenir comme stockage principal initial.
 À réexaminer pour des exports analytiques si un besoin apparaît.
 
-### Recommandation provisoire
+### Décision retenue
 
 Retenir JSONL pour les métadonnées brutes autorisées et SQLite
 pour les données nettoyées, les thèmes et les éditions.
@@ -326,8 +333,15 @@ Conditions de validité :
 - Données collectées exclues du dépôt Git.
 - Droits de réutilisation des sources à clarifier avant exploitation.
 
-Ce choix sera validé collectivement avec le référent infrastructure
-avant d'être reporté dans la note de cadrage.
+Le choix JSONL + SQLite est validé pour la première architecture
+et reporté dans docs/cadrage.md.
+
+En développement, le code et les données d'exécution seront placés
+dans le système de fichiers Linux de WSL 2. Chaque membre disposera
+de ses données de test locales.
+
+Les mesures de persistance, de sauvegarde et de restauration restent
+à mettre en œuvre et à tester lors des TD suivants.
 
 ### Sources
 
